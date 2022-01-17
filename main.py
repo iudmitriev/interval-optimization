@@ -50,6 +50,7 @@ def GetGlobalMinimum(func, interval, e, var=sym.Symbol('x')):
             global_minimum_point = interval.mid()
     return global_minimum_point
 
+
 def RunTest(test, vocal=None):
     test_format = r"expression = ([^;]+); interval = \[([^;,]+), ([^;,]+)\]; e = ([^;]+); expected = ([^;]+)"
     m = re.match(test_format, test)
