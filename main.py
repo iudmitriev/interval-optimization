@@ -15,9 +15,9 @@ def SimpleNewtonInterval(func, interval_diff, interval, e):
         for result_interval in result.data:
             area = interval_diff(Intervals([result_interval]))
 
-            part_to_intersect = valueToIntervals(area).inversed()
-            part_to_intersect = part_to_intersect * valueToIntervals(-func(result_interval.mid()))
-            part_to_intersect = part_to_intersect + valueToIntervals(result_interval.mid())
+            part_to_intersect = value_to_intervals(area).inversed()
+            part_to_intersect = part_to_intersect * value_to_intervals(-func(result_interval.mid()))
+            part_to_intersect = part_to_intersect + value_to_intervals(result_interval.mid())
 
             result_part = Intervals([result_interval])
             result_part.intersect(part_to_intersect)
@@ -63,13 +63,13 @@ def RunTest(test, vocal=None):
     if vocal is not None:
         print(f"Expression = {expression}, interval = {interval}, e = {e}")
         print("Critical points are ", end='')
-        printAsPoints(critical_points)
+        print_as_points(critical_points)
 
         if vocal:
             print(f"Intervals are {critical_points}")
         print(f"Expected {expected}")
 
-    if critical_points.IsIn(expected):
+    if critical_points.is_in(expected):
         if vocal is not None:
             print(f"{TerminalColors.OKGREEN}Passed!{TerminalColors.ENDC}")
             print()

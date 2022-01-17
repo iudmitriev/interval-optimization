@@ -1,6 +1,6 @@
 from interval import *
 import math
-from copy import copy, deepcopy
+from copy import deepcopy
 
 
 class Intervals:
@@ -24,7 +24,7 @@ class Intervals:
             result += interval.width()
         return result
 
-    def IsIn(self, number):
+    def is_in(self, number):
         for interval in self.data:
             if interval[0] <= number <= interval[1]:
                 return True
@@ -33,21 +33,21 @@ class Intervals:
     def __add__(self, other):
         result = []
         for interval1 in self.data:
-            for interval2 in valueToIntervals(other).data:
+            for interval2 in value_to_intervals(other).data:
                 result.append(interval1 + interval2)
         return Intervals(result)
 
     def __sub__(self, other):
         result = []
         for interval1 in self.data:
-            for interval2 in valueToIntervals(other).data:
+            for interval2 in value_to_intervals(other).data:
                 result.append(interval1 - interval2)
         return Intervals(result)
 
     def __mul__(self, other):
         result = []
         for interval1 in self.data:
-            for interval2 in valueToIntervals(other).data:
+            for interval2 in value_to_intervals(other).data:
                 result.append(interval1 * interval2)
         return Intervals(result)
 
@@ -59,26 +59,6 @@ class Intervals:
         for interval in self.data:
             result.append(interval ** power)
         return Intervals(result)
-
-    def add_number(self, number):
-        result = self.data.copy()
-        for interval in result:
-            interval[0] += number
-            interval[1] += number
-        return Intervals(result)
-
-    def mul_number(self, number):
-        result = self.data.copy()
-        for interval in result:
-            interval[0] *= number
-            interval[1] *= number
-            if number < 0:
-                interval[0], interval[1] = interval[1], interval[0]
-
-        if number < 0:
-            result.reverse()
-        return Intervals(result)
-
 
     def inversed(self):
         result = []
@@ -106,7 +86,7 @@ class Intervals:
     def intersect_with_one_interval(self, interval):
         result = []
         for old_interval in self.data:
-            intersection = Intersection(old_interval, interval)
+            intersection = intersection(old_interval, interval)
             if intersection:
                 result.append(intersection)
         self.data = result
@@ -116,9 +96,9 @@ class Intervals:
         result = []
         for new_interval in intervals.data:
             for old_interval in self.data:
-                intersection = Intersection(old_interval, new_interval)
-                if intersection:
-                    result.append(intersection)
+                intersection_part = intersection(old_interval, new_interval)
+                if intersection_part:
+                    result.append(intersection_part)
         self.data = result
         self._normalize()
 
@@ -135,7 +115,7 @@ class Intervals:
         self.data = normalized
 
 
-def valueToIntervals(expr):
+def value_to_intervals(expr):
     if isinstance(expr, Intervals):
         etmp = expr
     elif isinstance(expr, Interval):
@@ -145,7 +125,15 @@ def valueToIntervals(expr):
     return etmp
 
 
-def printAsPoints(intervals):
+def intersection(first_interval, second_interval):
+    result = [max(first_interval[0], second_interval[0]), min(first_interval[1], second_interval[1])]
+    if result[0] > result[1]:
+        return []
+    return Interval(result)
+
+
+
+def print_as_points(intervals):
     first = True
     for interval in intervals.data:
         if not first:

@@ -198,11 +198,3 @@ def log(x, base):
         return Interval([math.log(x[0], base), math.log(x[1], base)])
     else:
         return Interval([math.log(x[1], base), math.log(x[0], base)])
-
-
-def Intersection(first_interval, second_interval):
-    result = [max(first_interval[0], second_interval[0]), min(first_interval[1], second_interval[1])]
-    if result[0] > result[1]:
-        return []
-    return Interval(result)
-
