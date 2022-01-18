@@ -4,7 +4,7 @@ import sympy as sym
 
 from interval import *
 from intervals import *
-from terminal_colors import TerminalColors
+from terminal_colors import *
 
 
 def SimpleNewtonInterval(func, interval_diff, interval, e):
@@ -52,6 +52,13 @@ def GetGlobalMinimum(func, interval, e, var=sym.Symbol('x')):
 
 
 def RunTest(test, vocal=None):
+    '''
+
+    :param test:
+    :param vocal:
+    :return:
+    '''
+
     test_format = r"expression = ([^;]+); interval = \[([^;,]+), ([^;,]+)\]; e = ([^;]+); expected = ([^;]+)"
     m = re.match(test_format, test)
     expression = sym.parsing.sympy_parser.parse_expr(m.group(1))
@@ -71,12 +78,12 @@ def RunTest(test, vocal=None):
 
     if critical_points.is_in(expected):
         if vocal is not None:
-            print(f"{TerminalColors.OKGREEN}Passed!{TerminalColors.ENDC}")
+            print_green("Passed!")
             print()
         return True
     else:
         if vocal is not None:
-            print(f"{TerminalColors.FAIL}Failed!{TerminalColors.ENDC}")
+            print_red(f"Failed!")
             print()
         return False
 
@@ -93,29 +100,29 @@ def RunTests(file='tests.txt', vocal=None):
 
             try:
                 if vocal is not None:
-                    print(f"Running test {tests_finished}")
+                    print_yellow(f"Running test {tests_finished}")
                 result = RunTest(line, vocal)
                 if not result:
                     tests_not_passed += 1
             except (ValueError, TypeError, AttributeError):
                 tests_fail_to_match += 1
                 if vocal is not None:
-                    print(f"{TerminalColors.FAIL}Failed to match test {tests_finished}{TerminalColors.ENDC}")
+                    print_red(f"Failed to match test {tests_finished}")
                 raise
             tests_finished += 1
 
-        print(f"{TerminalColors.HEADER}Run {tests_finished} tests{TerminalColors.ENDC}")
+        print_yellow(f"Run {tests_finished} tests")
         if tests_fail_to_match != 0:
-            print(f"{TerminalColors.FAIL}Failed to match {tests_fail_to_match} tests{TerminalColors.ENDC}")
+            print_red(f"Failed to match {tests_fail_to_match} tests")
 
         tests_passed = tests_finished - tests_fail_to_match - tests_not_passed
-        print(f"{TerminalColors.OKGREEN}Passed {tests_passed}{TerminalColors.ENDC}")
+        print_green(f"Passed {tests_passed}")
         if tests_passed != tests_finished:
-            print(f"{TerminalColors.FAIL}Failed {tests_not_passed}{TerminalColors.ENDC}")
+            print_red(f"Failed {tests_not_passed}")
         else:
-            print(f"{TerminalColors.OKGREEN}All tests passed{TerminalColors.ENDC}")
+            print_green(f"All tests passed")
 
 
 
 if __name__ == '__main__':
-    RunTests(vocal=None)
+    RunTests(vocal=True)

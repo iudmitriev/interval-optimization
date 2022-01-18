@@ -8,3 +8,16 @@ class TerminalColors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+def print_green(line):
+    print(TerminalColors.OKGREEN + line + TerminalColors.ENDC)
+
+
+def print_red(line):
+    print(TerminalColors.FAIL + line + TerminalColors.ENDC)
+
+
+def print_yellow(line):
+    print(TerminalColors.WARNING + line + TerminalColors.ENDC)
+
