@@ -1,23 +1,2 @@
-expression = x**2; interval = [-5, 5]; e = 1e-4; expected = 0
-expression = (x + 10)**2; interval = [-31, 15]; e = 1e-4; expected = -10
-expression = (x - 10)**4 + 100; interval = [-50, 25]; e = 1e-4; expected = 10
-expression = x**6/6 - x**5 * 52/25 + x**4 * 39/80 + x**3 * 71/10 - x**2 * 79/20 - x + 1/10; interval = [-1.5, 11]; e = 1e-4; expected = 10
-expression = sin(x) + sin(10 * x / 3); interval = [-2.7, 7.5]; e = 1e-4; expected = 5.14574
-expression = -(16 * x**2 - 24 * x + 5) * exp(-x); interval = [1.9, 2.9]; e = 1e-3; expected = 2.868
-expression = (3 * x - 1.4) * sin(18 * x); interval = [0, 1.2]; e = 1e-3; expected = 0.966
-expression = -(x + sin(x)) * exp(-x**2); interval = [-10, 10]; e = 1e-3; expected = 0.680
-expression = sin(x) + sin(10 * x / 3) + log(x) - 0.84 * x + 3; interval = [2.7, 7.5]; e = 1e-3; expected = 5.200
-expression = sin(x) + sin(2 * x / 3); interval = [3.1, 20.4]; e = 1e-3; expected = 17.040
-expression = -x * sin(x); interval = [0, 10]; e = 1e-3; expected = 7.979
-expression = 2 * cos(x) + cos(2 * x); interval = [-1.57, 6.28]; e = 1e-3; expected = 4.189
-expression = 2 * cos(x) + cos(2 * x); interval = [-1.57, 6.28]; e = 1e-3; expected = 2.094
-expression = sin(x) ** 3 + cos(x) ** 3; interval = [0, 6.28]; e = 1e-3; expected = 4.712
-expression = sin(x) ** 3 + cos(x) ** 3; interval = [0, 6.28]; e = 1e-3; expected = 3.142
-expression = -exp(-x) * sin(2 * pi * x); interval = [0, 4]; e = 1e-3; expected = 0.225
-expression = (x**2 - 5 * x + 6) / (x**2 + 1); interval = [-5, 5]; e = 1e-3; expected = 2.414
-expression = 2 * (x - 3)**2 + exp(x**2 / 2); interval = [-3, 3]; e = 1e-3; expected = 1.591
-expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = 3
-expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = -3
 
-# expression = - x**(2/3) + (x**2 - 1)**(1/3); interval = [0.001, 0.99]; e = 1e-3; expected = 0.707
 # expression = ; interval = [, ]; e = ; expected =

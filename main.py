@@ -149,3 +149,7 @@ def RunTests(file='tests.txt', vocal=None):
 
 if __name__ == '__main__':
     RunTests(vocal=True)
+
+    print()
+    print("Running all tests...")
+    RunTests(file='all_tests.txt', vocal=False)
