@@ -135,21 +135,21 @@ def RunTests(file='tests.txt', vocal=None):
             else:
                 return
 
-        print_yellow(f"Run {tests_finished} tests")
-        if tests_fail_to_match != 0:
-            print_red(f"Failed to match {tests_fail_to_match} tests")
+        if tests_finished != 0:
+            print_yellow(f"Run {tests_finished} tests")
+            if tests_fail_to_match != 0:
+                print_red(f"Failed to match {tests_fail_to_match} tests")
 
-        print_green(f"Passed {tests_passed}")
-        if tests_passed != tests_finished:
-            print_red(f"Failed {tests_not_passed}")
-        else:
-            print_green(f"All tests passed")
+            print_green(f"Passed {tests_passed}")
+            if tests_passed != tests_finished:
+                print_red(f"Failed {tests_not_passed}")
+            else:
+                print_green(f"All tests passed")
 
 
 
 if __name__ == '__main__':
     RunTests(vocal=True)
 
-    print()
     print("Running all tests...")
     RunTests(file='all_tests.txt', vocal=False)
