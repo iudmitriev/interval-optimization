@@ -1,8 +1,9 @@
 import re
 
 import sympy as sym
+import numpy
 
-from interval import *
+import interval as interval_lib
 from intervals import *
 from terminal_colors import *
 
@@ -31,12 +32,13 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x')):
     diff = sym.diff(func, var)
     second_diff = sym.diff(diff, var)
 
-    f = sym.utilities.lambdify([var], diff)
-    interval_second_diff = sym.utilities.lambdify([var], second_diff)
+    custom_modules = [{'sin': intervals_sin}, 'numpy']
+    f = sym.utilities.lambdify([var], diff, modules=custom_modules)
+    interval_second_diff = sym.utilities.lambdify([var], second_diff, modules=custom_modules)
 
     result = SimpleNewtonInterval(f, interval_second_diff, interval, e)
-    result.append(valueToInterval(interval[0]))
-    result.append(valueToInterval(interval[1]))
+    result.append(interval_lib.valueToInterval(interval[0]))
+    result.append(interval_lib.valueToInterval(interval[1]))
     return result
 
 

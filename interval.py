@@ -179,7 +179,10 @@ def cos(x):
 
 
 def exp(x):
+    if isinstance(x, (int, float)):
+        return math.exp(x)
     return Interval([math.exp(x[0]), math.exp(x[1])])
+
 
 def abs(x):
     if x[1] < 0:

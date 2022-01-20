@@ -1,4 +1,6 @@
-from interval import *
+from interval import Interval
+from interval import sin, cos, exp
+
 import math
 from copy import deepcopy
 
@@ -42,6 +44,12 @@ class Intervals:
         for interval1 in self.data:
             for interval2 in value_to_intervals(other).data:
                 result.append(interval1 - interval2)
+        return Intervals(result)
+
+    def __neg__(self):
+        result = []
+        for interval in self.data:
+            result.append(-interval)
         return Intervals(result)
 
     def __mul__(self, other):
@@ -113,6 +121,45 @@ class Intervals:
             else:
                 normalized.append(interval)
         self.data = normalized
+
+
+def intervals_sin(x):
+    if isinstance(x, (int, float, Interval)):
+        return sin(x)
+    elif isinstance(x, Intervals):
+
+        result = []
+        for interval in x.data:
+            result.append(sin(interval))
+        return Intervals(result)
+    else:
+        raise TypeError()
+
+
+def intervals_cos(x):
+    if isinstance(x, (int, float, Interval)):
+        return cos(x)
+    elif isinstance(x, Intervals):
+
+        result = []
+        for interval in x.data:
+            result.append(cos(interval))
+        return Intervals(result)
+    else:
+        raise TypeError()
+
+
+def intervals_exp(x):
+    if isinstance(x, (int, float, Interval)):
+        return exp(x)
+    elif isinstance(x, Intervals):
+
+        result = []
+        for interval in x.data:
+            result.append(exp(interval))
+        return Intervals(result)
+    else:
+        raise TypeError()
 
 
 def value_to_intervals(expr):
