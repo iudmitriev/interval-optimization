@@ -32,7 +32,7 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x')):
     diff = sym.diff(func, var)
     second_diff = sym.diff(diff, var)
 
-    custom_modules = [{'sin': intervals_sin}, 'numpy']
+    custom_modules = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
     f = sym.utilities.lambdify([var], diff, modules=custom_modules)
     interval_second_diff = sym.utilities.lambdify([var], second_diff, modules=custom_modules)
 
@@ -80,11 +80,12 @@ def RunTest(test, vocal=None):
         print(f"Intervals are {critical_points}")
         print(f"Expected {expected}")
 
-    if critical_points.is_in(expected):
-        if vocal:
-            print_green("Passed!")
-            print()
-        return True
+    for point in critical_points.data:
+        if abs(expected - point.mid()) < e:
+            if vocal:
+                print_green("Passed!")
+                print()
+            return True
     else:
         if vocal:
             print_red(f"Failed!")
@@ -117,11 +118,13 @@ def RunTests(file='tests.txt', vocal=None):
                 result = RunTest(line, vocal)
                 if not result:
                     tests_not_passed += 1
-            except (ValueError, TypeError, AttributeError):
+            except (ValueError, TypeError, AttributeError) as e:
                 tests_fail_to_match += 1
                 if vocal:
                     print_red(f"Failed to match test {tests_finished}")
-                raise
+                    print_red("Exception:")
+                    print(e)
+                    print()
             tests_finished += 1
 
 

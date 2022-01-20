@@ -1,5 +1,5 @@
 from interval import Interval
-from interval import sin, cos, exp
+from interval import sin, cos, exp, log
 
 import math
 from copy import deepcopy
@@ -39,12 +39,20 @@ class Intervals:
                 result.append(interval1 + interval2)
         return Intervals(result)
 
+    def __radd__(self, other):
+        return self.__add__(other)
+
     def __sub__(self, other):
         result = []
         for interval1 in self.data:
             for interval2 in value_to_intervals(other).data:
                 result.append(interval1 - interval2)
         return Intervals(result)
+
+    def __rsub__(self, other):
+        other_intervals = value_to_intervals(other)
+        return other_intervals.__sub__(self)
+
 
     def __neg__(self):
         result = []
@@ -82,6 +90,13 @@ class Intervals:
                 result.append(Interval([1 / interval[1], 1 / interval[0]]))
         return Intervals(result)
 
+    def __truediv__(self, other):
+        other = value_to_intervals(other)
+        return self * other.inversed()
+
+    def __rtruediv__(self, other):
+        return other * self.inversed()
+
     def append(self, interval):
         self.data.append(Interval(interval.x.copy()))
         self._normalize()
@@ -91,16 +106,8 @@ class Intervals:
             self.data.append(Interval(interval.x.copy()))
         self._normalize()
 
-    def intersect_with_one_interval(self, interval):
-        result = []
-        for old_interval in self.data:
-            intersection = intersection(old_interval, interval)
-            if intersection:
-                result.append(intersection)
-        self.data = result
-        self._normalize()
-
     def intersect(self, intervals):
+        intervals = value_to_intervals(intervals)
         result = []
         for new_interval in intervals.data:
             for old_interval in self.data:
@@ -157,6 +164,19 @@ def intervals_exp(x):
         result = []
         for interval in x.data:
             result.append(exp(interval))
+        return Intervals(result)
+    else:
+        raise TypeError()
+
+
+def intervals_log(x, base):
+    if isinstance(x, (int, float, Interval)):
+        return log(x, base)
+    elif isinstance(x, Intervals):
+
+        result = []
+        for interval in x.data:
+            result.append(log(interval, base))
         return Intervals(result)
     else:
         raise TypeError()
