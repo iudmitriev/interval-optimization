@@ -8,12 +8,23 @@ from copy import deepcopy
 class Intervals:
     def __init__(self, intervals):
         self.data = deepcopy(intervals)
+        self._iteration_number = 0
         self._normalize()
+
+    def __iter__(self):
+        self._iteration_number = 0
+        return self
+
+    def __next__(self):
+        if self._iteration_number < len(self.data):
+            self._iteration_number += 1
+            return self.data[self._iteration_number - 1]
+        raise StopIteration
 
     def __repr__(self):
         result = ""
         first = True
-        for interval in self.data:
+        for interval in self:
             if not first:
                 result += ' U '
             result += str(interval)
@@ -22,20 +33,20 @@ class Intervals:
 
     def width(self):
         result = 0
-        for interval in self.data:
+        for interval in self:
             result += interval.width()
         return result
 
     def is_in(self, number):
-        for interval in self.data:
+        for interval in self:
             if interval[0] <= number <= interval[1]:
                 return True
         return False
 
     def __add__(self, other):
         result = []
-        for interval1 in self.data:
-            for interval2 in value_to_intervals(other).data:
+        for interval1 in self:
+            for interval2 in value_to_intervals(other):
                 result.append(interval1 + interval2)
         return Intervals(result)
 
@@ -44,8 +55,8 @@ class Intervals:
 
     def __sub__(self, other):
         result = []
-        for interval1 in self.data:
-            for interval2 in value_to_intervals(other).data:
+        for interval1 in self:
+            for interval2 in value_to_intervals(other):
                 result.append(interval1 - interval2)
         return Intervals(result)
 
@@ -56,14 +67,14 @@ class Intervals:
 
     def __neg__(self):
         result = []
-        for interval in self.data:
+        for interval in self:
             result.append(-interval)
         return Intervals(result)
 
     def __mul__(self, other):
         result = []
-        for interval1 in self.data:
-            for interval2 in value_to_intervals(other).data:
+        for interval1 in self:
+            for interval2 in value_to_intervals(other):
                 result.append(interval1 * interval2)
         return Intervals(result)
 
@@ -72,13 +83,13 @@ class Intervals:
 
     def __pow__(self, power):
         result = []
-        for interval in self.data:
+        for interval in self:
             result.append(interval ** power)
         return Intervals(result)
 
     def inversed(self):
         result = []
-        for interval in self.data:
+        for interval in self:
             if interval[0] <= 0 <= interval[1]:
                 if interval[0] != 0:
                     first = [-math.inf, 1 / interval[0]]
@@ -102,15 +113,16 @@ class Intervals:
         self._normalize()
 
     def union(self, intervals):
-        for interval in intervals.data:
+        intervals = value_to_intervals(intervals)
+        for interval in intervals:
             self.data.append(Interval(interval.x.copy()))
         self._normalize()
 
     def intersect(self, intervals):
         intervals = value_to_intervals(intervals)
         result = []
-        for new_interval in intervals.data:
-            for old_interval in self.data:
+        for new_interval in intervals:
+            for old_interval in self:
                 intersection_part = intersection(old_interval, new_interval)
                 if intersection_part:
                     result.append(intersection_part)
@@ -122,7 +134,7 @@ class Intervals:
         self.data.sort(key=lambda x: x[0])
 
         normalized = []
-        for interval in self.data:
+        for interval in self:
             if normalized and normalized[-1][1] >= interval[0]:
                 normalized[-1][1] = max(normalized[-1][1], interval[1])
             else:
@@ -136,7 +148,7 @@ def intervals_sin(x):
     elif isinstance(x, Intervals):
 
         result = []
-        for interval in x.data:
+        for interval in x:
             result.append(sin(interval))
         return Intervals(result)
     else:
@@ -149,7 +161,7 @@ def intervals_cos(x):
     elif isinstance(x, Intervals):
 
         result = []
-        for interval in x.data:
+        for interval in x:
             result.append(cos(interval))
         return Intervals(result)
     else:
@@ -162,7 +174,7 @@ def intervals_exp(x):
     elif isinstance(x, Intervals):
 
         result = []
-        for interval in x.data:
+        for interval in x:
             result.append(exp(interval))
         return Intervals(result)
     else:
@@ -175,7 +187,7 @@ def intervals_log(x, base):
     elif isinstance(x, Intervals):
 
         result = []
-        for interval in x.data:
+        for interval in x:
             result.append(log(interval, base))
         return Intervals(result)
     else:
@@ -202,7 +214,7 @@ def intersection(first_interval, second_interval):
 
 def print_as_points(intervals):
     first = True
-    for interval in intervals.data:
+    for interval in intervals:
         if not first:
             print(', ', end='')
         first = False

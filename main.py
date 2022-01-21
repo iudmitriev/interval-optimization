@@ -13,7 +13,7 @@ def SimpleNewtonInterval(func, interval_diff, interval, e):
 
     while result.width() > e:
         new_result = Intervals([])
-        for result_interval in result.data:
+        for result_interval in result:
             area = interval_diff(Intervals([result_interval]))
 
             part_to_intersect = value_to_intervals(area).inversed()
@@ -47,7 +47,7 @@ def GetGlobalMinimum(func, interval, e, var=sym.Symbol('x')):
     f = sym.utilities.lambdify([var], func)
 
     global_minimum_point = interval[0]
-    for interval in extremums.data:
+    for interval in extremums:
         if f(global_minimum_point) > f(interval.mid()):
             global_minimum_point = interval.mid()
     return global_minimum_point
@@ -80,7 +80,7 @@ def RunTest(test, vocal=None):
         print(f"Intervals are {critical_points}")
         print(f"Expected {expected}")
 
-    for point in critical_points.data:
+    for point in critical_points:
         if abs(expected - point.mid()) < e:
             if vocal:
                 print_green("Passed!")
