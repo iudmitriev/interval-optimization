@@ -123,8 +123,9 @@ class Intervals:
         result = []
         for new_interval in intervals:
             for old_interval in self:
-                intersection_part = intersection(old_interval, new_interval)
-                if intersection_part:
+                intersection_part = Interval([max(old_interval[0], new_interval[0]),
+                                              min(old_interval[1], new_interval[1])])
+                if intersection_part[0] <= intersection_part[1]:
                     result.append(intersection_part)
         self.data = result
         self._normalize()
@@ -202,14 +203,6 @@ def value_to_intervals(expr):
     else:
         etmp = Intervals([Interval([expr, expr])])
     return etmp
-
-
-def intersection(first_interval, second_interval):
-    result = [max(first_interval[0], second_interval[0]), min(first_interval[1], second_interval[1])]
-    if result[0] > result[1]:
-        return []
-    return Interval(result)
-
 
 
 def print_as_points(intervals):
