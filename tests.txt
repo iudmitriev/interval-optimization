@@ -4,8 +4,6 @@
 # expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = 3
 # expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = -3
 #
-# Почему-то вылезли комплексные числа
-# expression = - x**(2/3) + (x**2 - 1)**(1/3); interval = [0.001, 0.99]; e = 1e-3; expected = 0.707
 
 # Шаблон:
 # expression = ; interval = [, ]; e = ; expected =
