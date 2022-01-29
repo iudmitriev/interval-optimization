@@ -8,18 +8,10 @@ from copy import deepcopy
 class Intervals:
     def __init__(self, intervals):
         self.data = deepcopy(intervals)
-        self._iteration_number = 0
         self._normalize()
 
     def __iter__(self):
-        self._iteration_number = 0
-        return self
-
-    def __next__(self):
-        if self._iteration_number < len(self.data):
-            self._iteration_number += 1
-            return self.data[self._iteration_number - 1]
-        raise StopIteration
+        return iter(self.data)
 
     def __repr__(self):
         result = ""
