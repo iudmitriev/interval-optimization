@@ -65,9 +65,9 @@ def SecondDiffClassification(critical_points, second_diff):
     result = []
     for interval in critical_points:
         if second_diff(interval.mid()) > ACCURACY:
-            point_type = Extrema.Maximum
-        elif second_diff(interval.mid()) < ACCURACY:
             point_type = Extrema.Minimum
+        elif second_diff(interval.mid()) < ACCURACY:
+            point_type = Extrema.Maximum
         else:
             point_type = Extrema.Unknown
 

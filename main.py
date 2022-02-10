@@ -1,8 +1,12 @@
 from critical_points import *
 from terminal_colors import *
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 
-def RunTest(test, vocal=None):
+
+def RunTest(test, vocal=None, draw=False):
     """
     Принимает тест в формате
     expression = выражение; interval = [левый конец, правый конец]; e = число; expected = число
@@ -28,6 +32,10 @@ def RunTest(test, vocal=None):
         print_critical_points(critical_points)
         print(f"Expected {expected}")
 
+    if draw:
+        f = sym.utilities.lambdify(['x'], expression)
+        DrawPoints(critical_points, f, interval)
+
     for point in critical_points:
         if abs(expected - point.x) < e:
             if vocal:
@@ -41,7 +49,7 @@ def RunTest(test, vocal=None):
         return False
 
 
-def RunTests(file='tests.txt', vocal=None):
+def RunTests(file='tests.txt', vocal=None, draw=False):
     """
     Открывает файл file и читает из него тесты в формате
     expression = выражение; interval = [левый конец, правый конец]; e = число; expected = число
@@ -63,7 +71,7 @@ def RunTests(file='tests.txt', vocal=None):
             try:
                 if vocal:
                     print_yellow(f"Running test {tests_finished}")
-                result = RunTest(line, vocal)
+                result = RunTest(line, vocal, draw)
                 if not result:
                     tests_not_passed += 1
             except (ValueError, TypeError, AttributeError) as e:
@@ -99,10 +107,35 @@ def RunTests(file='tests.txt', vocal=None):
                 print_green(f"All tests passed")
 
 
+def DrawPoints(critical_points, func, interval):
+    x = np.linspace(interval[0], interval[1], 1000)
+    y = [func(p) for p in x]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(x, y, label='function')
+
+    min_points_x = []
+    max_points_x = []
+    unknown_points_x = []
+    for p in critical_points:
+        if p.type == Extrema.Minimum:
+            min_points_x.append(p.x)
+        elif p.type == Extrema.Maximum:
+            max_points_x.append(p.x)
+        else:
+            unknown_points_x.append(p.x)
+
+    ax.plot(min_points_x, [func(x) for x in min_points_x], 'o', label='minimum points')
+    ax.plot(max_points_x, [func(x) for x in max_points_x], 'o', label='maximum points')
+    ax.plot(unknown_points_x, [func(x) for x in unknown_points_x], 'o', label='unknown points')
+
+    ax.legend()
+    plt.show()
+
 
 if __name__ == '__main__':
-    RunTests(vocal=True)
+    RunTests(vocal=True, draw=True)
 
     if True:
         print("Running all tests...")
-        RunTests(file='all_tests.txt', vocal=True)
+        RunTests(file='all_tests.txt', vocal=True, draw=False)
