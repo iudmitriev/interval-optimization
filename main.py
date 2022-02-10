@@ -1,4 +1,6 @@
+import collections
 import re
+import enum
 
 import sympy as sym
 import numpy
@@ -7,9 +9,10 @@ import interval as interval_lib
 from intervals import *
 from terminal_colors import *
 
+ACCURACY = 1e-9
 
 def is_zero(value):
-    if abs(value) < 1e-12:
+    if abs(value) < ACCURACY:
         return True
     return False
 
@@ -46,17 +49,52 @@ def SimpleNewtonInterval(func, interval_diff, interval, e):
     return result
 
 
-def GetCriticalPoints(func, interval, e, var=sym.Symbol('x')):
+class Extrema(enum.Enum):
+    Minimum = enum.auto()
+    Maximum = enum.auto()
+    Unknown = enum.auto()
+
+    def __str__(self):
+        return self.name
+
+
+CriticalPoint = collections.namedtuple('CriticalPoint', ['x', 'delta', 'type'])
+
+
+def SecondDiffClassification(critical_points, second_diff):
+    result = []
+    for interval in critical_points:
+        if second_diff(interval.mid()) > ACCURACY:
+            point_type = Extrema.Maximum
+        elif second_diff(interval.mid()) < ACCURACY:
+            point_type = Extrema.Minimum
+        else:
+            point_type = Extrema.Unknown
+
+        point = CriticalPoint(x=interval.mid(), delta=interval.width()/2, type=point_type)
+        result.append(point)
+    return result
+
+
+def print_critical_points(critical_points):
+    for point in critical_points:
+        print(f"Point {point.x} ± {point.delta}, type = {point.type}")
+
+
+def GetCriticalPoints(func, interval, e, var=sym.Symbol('x'), classify=False):
     diff = sym.diff(func, var)
     second_diff = sym.diff(diff, var)
 
     custom_modules = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
     f = sym.utilities.lambdify([var], diff, modules=custom_modules)
-    interval_second_diff = sym.utilities.lambdify([var], second_diff, modules=custom_modules)
+    second_diff_func = sym.utilities.lambdify([var], second_diff, modules=custom_modules)
 
-    result = SimpleNewtonInterval(f, interval_second_diff, interval, e)
+    result = SimpleNewtonInterval(f, second_diff_func, interval, e)
     result.append(interval_lib.valueToInterval(interval[0]))
     result.append(interval_lib.valueToInterval(interval[1]))
+
+    if classify:
+        result = SecondDiffClassification(result, second_diff_func)
     return result
 
 
@@ -89,17 +127,15 @@ def RunTest(test, vocal=None):
     e = float(m.group(4))
     expected = float(m.group(5))
 
-    critical_points = GetCriticalPoints(expression, interval, e)
+    critical_points = GetCriticalPoints(expression, interval, e, classify=True)
     if vocal:
         print(f"Expression = {expression}, interval = {interval}, e = {e}")
-        print("Critical points are ", end='')
-        print_as_points(critical_points)
-
-        print(f"Intervals are {critical_points}")
+        print("Critical points are ")
+        print_critical_points(critical_points)
         print(f"Expected {expected}")
 
     for point in critical_points:
-        if abs(expected - point.mid()) < e:
+        if abs(expected - point.x) < e:
             if vocal:
                 print_green("Passed!")
                 print()
