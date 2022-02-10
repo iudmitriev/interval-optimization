@@ -23,11 +23,11 @@ class Intervals:
             first = False
         return result
 
-    def width(self):
-        result = 0
-        for interval in self:
-            result += interval.width()
-        return result
+    def sum_width(self):
+        return sum(interval.width() for interval in self)
+
+    def max_width(self):
+        return max(interval.width() for interval in self)
 
     def is_in(self, number):
         for interval in self:

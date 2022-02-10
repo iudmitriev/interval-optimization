@@ -11,10 +11,10 @@ from terminal_colors import *
 def SimpleNewtonInterval(func, interval_diff, interval, e):
     result = Intervals([interval])
 
-    while result.width() > e:
+    while result.max_width() > e:
         new_result = Intervals([])
         for result_interval in result:
-            area = interval_diff(Intervals([result_interval]))
+            area = interval_diff(value_to_intervals(result_interval))
 
             part_to_intersect = value_to_intervals(area).inversed()
             part_to_intersect = part_to_intersect * value_to_intervals(-func(result_interval.mid()))
@@ -152,4 +152,4 @@ if __name__ == '__main__':
     RunTests(vocal=True)
 
     print("Running all tests...")
-    RunTests(file='all_tests.txt', vocal=False)
+    RunTests(file='all_tests.txt', vocal=True)
