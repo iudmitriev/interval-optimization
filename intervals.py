@@ -13,6 +13,9 @@ class Intervals:
     def __iter__(self):
         return iter(self.data)
 
+    def __bool__(self):
+        return bool(self.data)
+
     def __repr__(self):
         result = ""
         first = True
@@ -22,6 +25,12 @@ class Intervals:
             result += str(interval)
             first = False
         return result
+
+    def is_in(self, value):
+        for interval in self:
+            if interval[0] <= value <= interval[1]:
+                return True
+        return False
 
     def sum_width(self):
         return sum(interval.width() for interval in self)

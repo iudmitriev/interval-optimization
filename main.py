@@ -8,23 +8,41 @@ from intervals import *
 from terminal_colors import *
 
 
+def is_zero(value):
+    if abs(value) < 1e-12:
+        return True
+    return False
+
+
 def SimpleNewtonInterval(func, interval_diff, interval, e):
+    found_zeros = Intervals([])
     result = Intervals([interval])
 
-    while result.max_width() > e:
+    while result and result.max_width() > e:
         new_result = Intervals([])
         for result_interval in result:
             area = interval_diff(value_to_intervals(result_interval))
+            area = value_to_intervals(area)
 
-            part_to_intersect = value_to_intervals(area).inversed()
-            part_to_intersect = part_to_intersect * value_to_intervals(-func(result_interval.mid()))
-            part_to_intersect = part_to_intersect + value_to_intervals(result_interval.mid())
+            if is_zero(func(result_interval.mid())) and area.is_in(0):
+                x = result_interval.mid()
+                found_zeros.append(Interval([x - e / 4, x + e / 4]))
 
-            result_part = Intervals([result_interval])
-            result_part.intersect(part_to_intersect)
+                result_part = Intervals([])
+                result_part.append(Interval([result_interval[0], x - e/4]))
+                result_part.append(Interval([x + e/4, result_interval[1]]))
+            else:
+                part_to_intersect = value_to_intervals(area).inversed()
+                part_to_intersect = part_to_intersect * value_to_intervals(-func(result_interval.mid()))
+                part_to_intersect = part_to_intersect + value_to_intervals(result_interval.mid())
+
+                result_part = Intervals([result_interval])
+                result_part.intersect(part_to_intersect)
 
             new_result.union(result_part)
         result = new_result
+
+    result.union(found_zeros)
     return result
 
 
@@ -125,6 +143,9 @@ def RunTests(file='tests.txt', vocal=None):
                     print_red("Exception:")
                     print(e)
                     print()
+
+                if vocal is None:
+                    raise
             tests_finished += 1
 
 
@@ -149,7 +170,8 @@ def RunTests(file='tests.txt', vocal=None):
 
 
 if __name__ == '__main__':
-    RunTests(vocal=True)
+    #RunTests(vocal=True)
 
-    print("Running all tests...")
-    RunTests(file='all_tests.txt', vocal=True)
+    if True:
+        print("Running all tests...")
+        RunTests(file='all_tests.txt', vocal=True)

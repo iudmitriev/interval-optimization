@@ -1,8 +1,8 @@
 # Пока не работает:
 #
 # Умножение inf на 0 даёт nan
-# expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = 3
-# expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = -3
+expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = 3
+expression = x**6 - 15 * x**4 + 27 * x**2 + 250; interval = [-4, 4]; e = 1e-3; expected = -3
 #
 
 # Шаблон:
