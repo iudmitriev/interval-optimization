@@ -1,5 +1,4 @@
 import collections
-import re
 import enum
 
 import sympy as sym
@@ -7,7 +6,6 @@ import numpy
 
 import interval as interval_lib
 from intervals import *
-from terminal_colors import *
 
 ACCURACY = 1e-9
 

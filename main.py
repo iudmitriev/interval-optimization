@@ -1,3 +1,5 @@
+import re
+
 from critical_points import *
 from terminal_colors import *
 
@@ -33,8 +35,7 @@ def RunTest(test, vocal=None, draw=False):
         print(f"Expected {expected}")
 
     if draw:
-        f = sym.utilities.lambdify(['x'], expression)
-        DrawPoints(critical_points, f, interval)
+        DrawPoints(critical_points, expression, interval)
 
     for point in critical_points:
         if abs(expected - point.x) < e:
@@ -107,12 +108,13 @@ def RunTests(file='tests.txt', vocal=None, draw=False):
                 print_green(f"All tests passed")
 
 
-def DrawPoints(critical_points, func, interval):
+def DrawPoints(critical_points, expression, interval):
+    func = sym.utilities.lambdify(['x'], expression)
     x = np.linspace(interval[0], interval[1], 1000)
-    y = [func(p) for p in x]
+    y = list(map(func, x))
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(x, y, label='function')
+    plt.plot(x, y, color='b', label=str(expression))
 
     min_points_x = []
     max_points_x = []
@@ -125,17 +127,18 @@ def DrawPoints(critical_points, func, interval):
         else:
             unknown_points_x.append(p.x)
 
-    ax.plot(min_points_x, [func(x) for x in min_points_x], 'o', label='minimum points')
-    ax.plot(max_points_x, [func(x) for x in max_points_x], 'o', label='maximum points')
-    ax.plot(unknown_points_x, [func(x) for x in unknown_points_x], 'o', label='unknown points')
+    ax.scatter(min_points_x, list(map(func, min_points_x)), color='r', label='minimum points')
+    ax.scatter(max_points_x, list(map(func, max_points_x)), color='g', label='maximum points')
+    ax.scatter(unknown_points_x, list(map(func, unknown_points_x)), color='y', label='unknown points')
 
     ax.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    RunTests(vocal=True, draw=True)
+    if False:
+        RunTests(vocal=True, draw=True)
 
     if True:
         print("Running all tests...")
-        RunTests(file='all_tests.txt', vocal=True, draw=False)
+        RunTests(file='all_tests.txt', vocal=True, draw=True)
