@@ -7,7 +7,9 @@ import numpy
 import interval as interval_lib
 from intervals import *
 
-ACCURACY = 1e-9
+ACCURACY = 1e-3
+CUSTOM_MODULES = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
+
 
 def is_zero(value):
     if abs(value) < ACCURACY:
@@ -59,15 +61,34 @@ class Extrema(enum.Enum):
 CriticalPoint = collections.namedtuple('CriticalPoint', ['x', 'delta', 'type'])
 
 
-def SecondDiffClassification(critical_points, second_diff):
+def DiffClassification(critical_points, expression, starting_interval, e):
     result = []
+    MAX_NUMBER_OF_TRIES = 10
+    accuracy = 10 * e
     for interval in critical_points:
-        if second_diff(interval.mid()) > ACCURACY:
-            point_type = Extrema.Minimum
-        elif second_diff(interval.mid()) < ACCURACY:
-            point_type = Extrema.Maximum
-        else:
+        diff_expr = expression.diff()
+        diff_func = sym.utilities.lambdify(['x'], diff_expr, modules=CUSTOM_MODULES)
+
+
+        i = 0
+        while abs(diff_func(interval.mid())) < accuracy and i < MAX_NUMBER_OF_TRIES:
+            diff_expr = diff_expr.diff()
+            diff_func = sym.utilities.lambdify(['x'], diff_expr, modules=CUSTOM_MODULES)
+            i += 1
+
+        if i == MAX_NUMBER_OF_TRIES:
             point_type = Extrema.Unknown
+        elif diff_func(interval.mid()) > accuracy:
+            point_type = Extrema.Minimum
+        else:
+            point_type = Extrema.Maximum
+
+        if interval.mid() == starting_interval[1] and i == 0:
+            if diff_func(interval.mid()) > accuracy:
+                point_type = Extrema.Maximum
+            else:
+                point_type = Extrema.Minimum
+
 
         point = CriticalPoint(x=interval.mid(), delta=interval.width()/2, type=point_type)
         result.append(point)
@@ -83,16 +104,15 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x'), classify=False):
     diff = sym.diff(func, var)
     second_diff = sym.diff(diff, var)
 
-    custom_modules = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
-    f = sym.utilities.lambdify([var], diff, modules=custom_modules)
-    second_diff_func = sym.utilities.lambdify([var], second_diff, modules=custom_modules)
+    f = sym.utilities.lambdify([var], diff, modules=CUSTOM_MODULES)
+    second_diff_func = sym.utilities.lambdify([var], second_diff, modules=CUSTOM_MODULES)
 
     result = SimpleNewtonInterval(f, second_diff_func, interval, e)
     result.append(interval_lib.valueToInterval(interval[0]))
     result.append(interval_lib.valueToInterval(interval[1]))
 
     if classify:
-        result = SecondDiffClassification(result, second_diff_func)
+        result = DiffClassification(result, func, interval, e)
     return result
 
 
