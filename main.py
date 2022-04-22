@@ -3,6 +3,8 @@ import re
 from critical_points import *
 from terminal_colors import *
 
+from decimal import Decimal
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,21 +26,21 @@ def RunTest(test, vocal=None, draw=False):
     m = re.match(test_format, test)
     expression = sym.parsing.sympy_parser.parse_expr(m.group(1))
     interval = Interval([float(m.group(2)), float(m.group(3))])
-    e = float(m.group(4))
-    expected = float(m.group(5))
+    e = Decimal(m.group(4))
+    expected = Decimal(m.group(5))
 
-    critical_points = GetCriticalPoints(expression, interval, e, classify=True)
+    critical_points = GetCriticalPoints(expression, interval, e / 10, classify=False)
     if vocal:
         print(f"Expression = {expression}, interval = {interval}, e = {e}")
-        print("Critical points are ")
-        print_critical_points(critical_points)
         print(f"Expected {expected}")
 
     if draw:
         DrawPoints(critical_points, expression, interval)
 
-    for point in critical_points:
-        if abs(expected - point.x) < e:
+    for interval in critical_points:
+        if vocal:
+            print(f'interval [{interval[0]}, {interval[1]}]')
+        if interval.isAround(expected):
             if vocal:
                 print_green("Passed!")
                 print()
@@ -136,9 +138,9 @@ def DrawPoints(critical_points, expression, interval):
 
 
 if __name__ == '__main__':
-    if False:
-        RunTests(vocal=True, draw=True)
-
     if True:
+        RunTests(vocal=True, draw=False)
+
+    if False:
         print("Running all tests...")
-        RunTests(file='all_tests.txt', vocal=True, draw=True)
+        RunTests(file='all_tests.txt', vocal=None, draw=False)

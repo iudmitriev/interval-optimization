@@ -1,203 +1,577 @@
+from decimal import *
 import math
-import sympy
+
+
+def decsig(value):
+    '''
+    Вычисление знака числа как объекта класса Decimal
+            Параметры:
+                    value (Decimal): число, объект класса Decimal;
+            Возвращаемое значение:
+                    sgn (Decimal): число, объект класса Decimal, знак исходного числа (Decimal("1") или Decimal("-1"))
+    '''
+    return Decimal('1').copy_sign(Decimal(value))
+
+
+def quantizestring(cnt):
+    '''
+    Получение строки для метода Decimal.quantize для округления с нужной точностью
+            Параметры:
+                    cnt (int): число, необходимая точность округления;
+            Возвращаемое значение:
+                    strquant (str): строка, конвертируемая в объект класса Decimal, для метода Decimal.quantize.
+    '''
+    strquant = '0'
+    if (cnt <= 0):
+        return strquant
+    strquant = strquant + '.'
+    for i in range(cnt):
+        strquant = strquant + '0'
+    return strquant
+
+
+def decpi():
+    '''
+    Вычисление константы - числа Пи как объекта класса Decimal
+            Параметры:
+                    -
+            Возвращаемое значение:
+                    s (Decimal): число, объект класса Decimal, значение числа Пи, вычисленное итеративным методом.
+                        Точность: зависит от внешнего контекста.
+                        Округление: зависит от внешнего контекста.
+    '''
+    curcontext = getcontext()
+    getcontext().prec += 10
+    getcontext().rounding = ROUND_HALF_EVEN
+    three = Decimal("3")
+    lasts, t, s, n, na, d, da = 0, three, 3, 1, 0, 0, 24
+    while s != lasts:
+        lasts = s
+        n, na = n + na, na + 8
+        d, da = d + da, da + 32
+        t = (t * n) / d
+        s += t
+    setcontext(curcontext)
+    return +s
+
+
+def decsin(x):
+    '''
+    Вычисление синуса числа - объекта класса Decimal
+            Параметры:
+                    x (Decimal): число, объект класса Decimal
+            Возвращаемое значение:
+                    s (Decimal): число, объект класса Decimal, значение sin(x), вычисленное с помощью разложения в ряд Тейлора
+                        Точность: зависит от внешнего контекста.
+                        Округление: зависит от внешнего контекста. 
+                        [[[Функция может нарушить принцип внешнего округления Interval на малую величину - WIP]]]
+    '''
+    curcontext = getcontext()
+    getcontext().prec += 10
+    getcontext().rounding = ROUND_HALF_EVEN
+    i, lasts, s, fact, num, sign = 1, 0, x, 1, x, 1
+    while x > 0:
+        x -= Decimal("2") * decpi()
+    while x < 0:
+        x += Decimal("2") * decpi()
+    while s != lasts:
+        lasts = s
+        i += 2
+        fact *= i * (i - 1)
+        num *= x * x
+        sign *= -1
+        s += num / fact * sign
+    setcontext(curcontext)
+    return +s
+
+
+def deccos(x):
+    '''
+    Вычисление косинуса числа - объекта класса Decimal
+            Параметры:
+                    x (Decimal): число, объект класса Decimal
+            Возвращаемое значение:
+                    s (Decimal): число, объект класса Decimal, значение cos(x), вычисленное с помощью разложения в ряд Тейлора
+                        Точность: зависит от внешнего контекста.
+                        Округление: зависит от внешнего контекста. 
+                        [[[Функция может нарушить принцип внешнего округления Interval на малую величину - WIP]]]
+    '''
+    curcontext = getcontext()
+    getcontext().prec += 10
+    getcontext().rounding = ROUND_HALF_EVEN
+    i, lasts, s, fact, num, sign = 0, 0, 1, 1, 1, 1
+    while x > 0:
+        x -= Decimal("2") * decpi()
+    while x < 0:
+        x += Decimal("2") * decpi()
+    while s != lasts:
+        lasts = s
+        i += 2
+        fact *= i * (i - 1)
+        num *= x * x
+        sign *= -1
+        s += num / fact * sign
+    setcontext(curcontext)
+    return +s
+
+
+def dectg(x):
+    '''
+    Вычисление тангенса числа - объекта класса Decimal
+            Параметры:
+                    x (Decimal): число, объект класса Decimal
+            Возвращаемое значение:
+                    s (Decimal): число, объект класса Decimal, значение tg(x) = sin(x) / cos(x);
+                        Точность: зависит от внешнего контекста.
+                        Округление: зависит от внешнего контекста.
+                        [[[Функция может нарушить принцип внешнего округления Interval - WIP]]]
+    '''
+    getcontext().prec += 10
+    s = decsin(x) / deccos(x)
+    getcontext().prec -= 10
+    return +s
+
+
+def decctg(x):
+    '''
+    Вычисление котангенса числа - объекта класса Decimal
+            Параметры:
+                    x (Decimal): число, объект класса Decimal
+            Возвращаемое значение:
+                    s (Decimal): число, объект класса Decimal, значение ctg(x) = cos(x) / sin(x);
+                        Точность: зависит от внешнего контекста.
+                        Округление: зависит от внешнего контекста.
+                        [[[Функция может нарушить принцип внешнего округления Interval - WIP]]]
+    '''
+    getcontext().prec += 10
+    s = deccos(x) / dectg(x)
+    getcontext().prec -= 10
+    return +s
 
 
 class Interval:
+    """
+    Класс Interval - интервальная арифметика с управляемой точностью
+            Поля:
+                precision (int): точность результата, необходимое количество значащих цифр после запятой        | Default: 10
+                calcprecision (int): точность вычислений, общее максимальное количество значащих цифр в числе   | Default: 50
+                multiintervalmode (int): 0 - выключить результат деления из двух интервалов, 1 - включить       | Default: 1
+            Вспомогательные методы взаимодействия с полями:
+                void intervaldiv (): результат деления - всегда один интервал (multiintervalmode = 0)
+                void multiintervaldiv (): результат деления может быть двумя интервалами (multiintervalmode = 1)
+                void setprecision (int prec): установить количество значащих цифр после запятой в prec (precision = prec)
+                void setcalcprecision (int prec): установить точность вычислений в x (calcprecision = prec)
+            Операторы:
+                +:  Interval __add__ (self, Interval): сумма двух интервалов с внешним расширяющим округлением
+                -:  Interval __sub__ (self, Interval): разность двух интервалов с внешним расширяющим округлением
+                *:  Interval __mul__ (self, Interval): произведение двух интервалов с внешним расширяющим округлением
+                **: Interval __pow__ (self, int): возведение интервала в целую степень с внешним расширяющим округлением
+                /:  Interval | [Interval, Interval] __truediv__ (self, Interval): частное двух интервалов с внешним расширяющим 
+                                                                        округлением при multiintervalmode = 1 возможен
+                                                                        возврат списка из двух объектов класса Interval
+
+            Методы:
+                Interval mid (self): возвращает точечный интервал - середину исходного интервала, с математическим округлением
+                Interval scale (self, int factor): возвращает интервал с тем же центром, расширенный
+                                             в factor раз, с внешним расширяющим округлением
+                Decimal width (self): возвращает ширину интервала (точно)
+                boolean isIn(self, Interval other): возвращает True, если исходный интервал внутри other, False иначе
+                boolean isAround(self, Interval other): возвращает True, если other внутри исходного интервала, False иначе
+
+            Математические функции:
+                Interval exp (self): интервал экспоненты данного интервала, с внешним расширяющим округлением
+                Interval sin (self): интервал синуса данного интервала, с внешним расширяющим округлением
+                                     [[[Возможна ошибка округления в последних знаках]]]
+                Interval cos (self): интервал косинуса данного интервала, с внешним расширяющим округлением
+                                     [[[Возможна ошибка округления в последних знаках]]]
+
+    """
+    precision = 10
+    multiintervalmode = 1
+    calcprecision = 50
+
+    __savedcontext = Context(prec=50, Emax=MAX_EMAX, Emin=MIN_EMIN, traps=[])
+
+    @staticmethod
+    def __savecontext():
+        Interval.__savedcontext = getcontext()
+        setcontext(Context(prec=Interval.calcprecision, Emax=MAX_EMAX, Emin=MIN_EMIN, traps=[]))
+
+    @staticmethod
+    def __loadcontext():
+        setcontext(Interval.__savedcontext)
 
     def __init__(self, x):
-        self.x = x.copy()
-        self.func = sympy.core.numbers.Number
-        self.args = ()
+        '''
+        Инициализация интервала
+                Параметры:
+                        x (List [x1, x2 ...]): список из хотя бы двух объектов, из которых можно создать объект класса Decimal
+        '''
+        Interval.__savecontext()
+        self.x = [0, 0]
+        self.x[0] = Decimal(x[0])
+        self.x[1] = Decimal(x[1])
+        self.__correctize()
+        Interval.__loadcontext()
 
     def __repr__(self):
+        Interval.__savecontext()
+        self.__correctize()
+        Interval.__loadcontext()
         return "[" + str(self.x[0]) + ", " + str(self.x[1]) + "]"
 
+    # my god...
     def mid(self):
-        return 0.5 * (self.x[0] + self.x[1])
+        '''
+        Получение середины интервала
+                Возвращаемое значение:
+                        middle (Decimal): число, объект класса Decimal, середина текущего интервала;
+                            Точность: зависит от параметров Interval.
+                            Округление: математическое.
+        '''
+        self.__savecontext()
+        middle = Decimal("Inf")
+        if (self.x[0] != Decimal("-Inf") and self.x[1] != Decimal("Inf")):
+            middle = (Decimal("0.5") * (self.x[0] + self.x[1])).quantize(Decimal(quantizestring(self.precision)),
+                                                                         rounding=ROUND_HALF_EVEN)
+        Interval.__loadcontext()
+        return middle
 
     def width(self):
+        '''
+        Получение ширины интервала
+                Возвращаемое значение:
+                        width (Decimal): число, объект класса Decimal, ширина текущего интервала;
+                            Точность: зависит от параметров Interval.
+                            Округление: нет (всегда точное значение в текущих параметрах).
+        '''
         return self.x[1] - self.x[0]
 
-
     def scale(self, factor):
-        m = 0.5 * (self.x[0] + self.x[1])
-        r = 0.5 * (self.x[1] - self.x[0])
-        self.x[0] = m - factor * r
-        self.x[1] = m + factor * r
-
+        '''
+        Расширение/сужение интервала при неизменном центре
+                Параметры:
+                        factor (...): число, объект, из которого можно создать объект класса Decimal
+                Результат:
+                        self расширяется в factor раз
+        '''
+        Interval.__savecontext()
+        m = Decimal("0.5") * (self.x[0] + self.x[1])
+        r = Decimal("0.5") * (self.x[1] - self.x[0])
+        getcontext().rounding = ROUND_FLOOR
+        self.x[0] = (m - Decimal(factor) * r)
+        getcontext().rounding = ROUND_CEILING
+        self.x[1] = (m + Decimal(factor) * r)
+        self.__correctize()
+        Interval.__loadcontext()
 
     def isIn(self, other):
-        return (self.x[0] >= other.x[0]) and (self.x[1] <= other.x[1])
+        '''
+        Проверка вложенности в другой интервал
+                Параметры:
+                        other (...): объект, из которого можно создать объект класса Interval;
+                Возвращаемое значение:
+                        result (boolean): результат предиката вложенности текущего интервала в другой интервал;
+        '''
+        ointerval = Interval.valueToInterval(other)
+        return (self.x[0] >= ointerval.x[0]) and (self.x[1] <= ointerval.x[1])
 
+    def isAround(self, other):
+        '''
+        Проверка вложенности другого интервала
+                Параметры:
+                        other (...): объект, из которого можно создать объект класса Interval;
+                Возвращаемое значение:
+                        result (boolean): результат предиката вложенности другого интервала в текущий интервал;
+        '''
+        ointerval = Interval.valueToInterval(other)
+        return (self.x[0] <= ointerval.x[0]) and (self.x[1] >= ointerval.x[1])
 
-    def isNoIntersec(self, other):
-        return (self.x[0] > other.x[1]) or (self.x[1] < other.x[0])
-
-
-    def intersec(self, other):
-        if self.x[0] > self.x[1]:
-            raise ValueError(other.x[0], other.x[1], "results in wrong bounds:", self.x[0], self.x[1])
-        return Interval([max(self.x[0], other.x[0]), min(self.x[1], other.x[1])])
+    def __correctize(self):
+        self.x = sorted(self.x)
+        if (self.x[0] != Decimal("Inf") and self.x[0] != Decimal("-Inf")):
+            self.x[0] = self.x[0].quantize(Decimal(quantizestring(self.precision)), rounding=ROUND_FLOOR)
+        if (self.x[1] != Decimal("Inf") and self.x[1] != Decimal("-Inf")):
+            self.x[1] = self.x[1].quantize(Decimal(quantizestring(self.precision)), rounding=ROUND_CEILING)
 
     def __getitem__(self, item):
+        Interval.__savecontext()
+        self.__correctize()
+        Interval.__loadcontext()
         return self.x[item]
 
     def __setitem__(self, key, value):
-        self.x.__setitem__(key, value)
+        Interval.__savecontext()
+        self.x.__setitem__(key, Decimal(value))
+        self.__correctize()
+        Interval.__loadcontext()
 
     def __neg__(self):
         ninterval = Interval(self.x)
+        Interval.__savecontext()
         ninterval.x[0] = - self.x[1]
         ninterval.x[1] = - self.x[0]
+        ninterval.__correctize()
+        Interval.__loadcontext()
         return ninterval
 
     def __add__(self, other):
-        ointerval = valueToInterval(other)
+        ointerval = Interval.valueToInterval(other)
         ninterval = Interval(self.x)
+        Interval.__savecontext()
+        getcontext().rounding = ROUND_FLOOR
         ninterval.x[0] = self.x[0] + ointerval.x[0]
+        getcontext().rounding = ROUND_CEILING
         ninterval.x[1] = self.x[1] + ointerval.x[1]
+        ninterval.__correctize()
+        Interval.__loadcontext()
         return ninterval
+
+    def __pow__(self, other):
+        ninterval = Interval(self.x)
+        Interval.__savecontext()
+        nother = Decimal(other)
+        getcontext().rounding = ROUND_FLOOR
+        vrd = [self.x[0] ** nother, self.x[1] ** nother]
+        getcontext().rounding = ROUND_CEILING
+        vru = [self.x[0] ** nother, self.x[1] ** nother]
+        return Interval([min(vrd), max(vrd)])
 
     def __radd__(self, other):
         return self.__add__(other)
 
     def __sub__(self, other):
-        ointerval = valueToInterval(other)
+        ointerval = Interval.valueToInterval(other)
         ninterval = Interval(self.x)
+        Interval.__savecontext()
+        getcontext().rounding = ROUND_FLOOR
         ninterval.x[0] = self.x[0] - ointerval.x[1]
+        getcontext().rounding = ROUND_CEILING
         ninterval.x[1] = self.x[1] - ointerval.x[0]
+        ninterval.__correctize()
+        Interval.__loadcontext()
         return ninterval
-
 
     def __rsub__(self, other):
-        ointerval = valueToInterval(other)
+        ointerval = self.valueToInterval(other)
         return ointerval.__sub__(self)
 
-
-    def __pow__(self, other):
-        ninterval = Interval(self.x)
-        u = self.x[0] ** other
-        v = self.x[1] ** other
-        if other == 0:
-            ninterval.x[0] = 1
-            ninterval.x[1] = 1
-        elif other % 2 == 0:
-            ninterval.x[1] = max(u, v)
-            if self.x[0] <= 0 and self.x[1] >= 0:
-                ninterval.x[0] = 0
-            else:
-                ninterval.x[0] = min(u, v)
-        else:
-            ninterval.x[0] = u
-            ninterval.x[1] = v
-        return ninterval
-
     def __mul__(self, other):
-        ointerval = valueToInterval(other)
-        v = [self.x[0] * ointerval.x[0], self.x[0] * ointerval.x[1], self.x[1] * ointerval.x[0], self.x[1] * ointerval.x[1]]
-        b = [min(v), max(v)]
-        return Interval(b)
-
-
-    def __truediv__(self, other):
-        ointerval = valueToInterval(other)
-        v = [self.x[0] / ointerval.x[0], self.x[0] / ointerval.x[1], self.x[1] / ointerval.x[0], self.x[1] / ointerval.x[1]]
-        b = [min(v), max(v)]
-        return Interval(b)
-
-    def __floordiv__(self, other):
-        ointerval = valueToInterval(other)
-        if ointerval[0] != 0 and ointerval[1] != 0:
-            v = [self.x[0] // ointerval.x[0], self.x[0] // ointerval.x[1], self.x[1] // ointerval.x[0],
-                 self.x[1] // ointerval.x[1]]
-            print(v)
-            b = [min(v), max(v)]
-        else:
-            ointerval = Interval([0.001, 0.001])
-            v = [self.x[0] // ointerval.x[0], self.x[0] // ointerval.x[1], self.x[1] // ointerval.x[0],
-                 self.x[1] // ointerval.x[1]]
-            print(v)
-            b = [min(v), max(v)]
-        return Interval(b)
+        ointerval = Interval.valueToInterval(other)
+        Interval.__savecontext()
+        getcontext().rounding = ROUND_FLOOR
+        vrd = [self.x[0] * ointerval.x[0], self.x[0] * ointerval.x[1],
+               self.x[1] * ointerval.x[0], self.x[1] * ointerval.x[1]]
+        getcontext().rounding = ROUND_CEILING
+        vru = [self.x[0] * ointerval.x[0], self.x[0] * ointerval.x[1],
+               self.x[1] * ointerval.x[0], self.x[1] * ointerval.x[1]]
+        b = [min(vrd), max(vru)]
+        Interval.__loadcontext()
+        return Interval(b)  # __correctize inside
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    # 0: -0 or +0 not present
+    # 1: -0 present
+    # 2: +0 present
+    # 3: -0 and +0 present
+    # 4: NaN present
+    def __getNullType(self):
+        if (Decimal.is_nan(self.x[0]) or Decimal.is_nan(self.x[1])):
+            return 4
+        if (not self.isAround('0')):
+            return 0
+        if (decsig(self.x[0]) != decsig(self.x[1])):
+            return 3
+        if (decsig(self.x[0]) == 1):
+            return 2
+        if (decsig(self.x[0]) == -1):
+            return 1
+        return 4
 
-    def __rtruediv__(self, other):
-        return self.__truediv__(other)
+    def __truediv__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        Interval.__savecontext()
+        stype = self.__getNullType()
+        otype = ointerval.__getNullType()
+        if (stype == 4 or otype == 4):
+            Interval.__loadcontext()
+            return Interval(["nan", "nan"])
 
+        if ((stype == 3 and otype == 0) or (otype < 3 and stype < 3)):
+            getcontext().rounding = ROUND_FLOOR
+            vrd = [self.x[0] / ointerval.x[0], self.x[0] / ointerval.x[1],
+                   self.x[1] / ointerval.x[0], self.x[1] / ointerval.x[1]]
+            getcontext().rounding = ROUND_CEILING
+            vru = [self.x[0] / ointerval.x[0], self.x[0] / ointerval.x[1],
+                   self.x[1] / ointerval.x[0], self.x[1] / ointerval.x[1]]
+            vrd = [i for i in vrd if (not Decimal.is_nan(i))]
+            vru = [i for i in vru if (not Decimal.is_nan(i))]
+            if (len(vrd) == 0 or len(vru) == 0):
+                if (stype == otype):
+                    Interval.__loadcontext()
+                    return Interval(["0", "Inf"])
+                else:
+                    Interval.__loadcontext()
+                    return Interval(["-Inf", "-0"])
+            b = [min(vrd), max(vru)]
+            return Interval(b)
 
-def valueToInterval(expr):
-    if isinstance(expr, int):
-        etmp = Interval([expr, expr])
-    elif isinstance(expr, float):
-        etmp = Interval([expr, expr])
-    else:
-        etmp = expr
-    return etmp
+        if (otype == 3 and stype == 0):
+            if (not Interval.multiintervalmode):
+                Interval.__loadcontext()
+                return Interval(["-Inf", "Inf"])
+            b1 = self / Interval([ointerval.x[0], Decimal("-0")])
+            b2 = self / Interval([Decimal("0"), ointerval.x[1]])
+            Interval.__loadcontext()
+            return [b1, b2]
 
+        Interval.__loadcontext()
+        return Interval(["-Inf", "Inf"])
 
-def sin(x):
-    if isinstance(x, int):
-        return math.sin(x)
-    elif isinstance(x, float):
-        return math.sin(x)
-    else:
-        y = [math.sin(x[0]), math.sin(x[1])]
-        pi2 = 2 * math.pi
-        pi05 = math.pi / 2
-        if math.ceil((x[0] - pi05)/pi2) <= math.floor((x[1] - pi05)/pi2):
+    @staticmethod
+    def intervaldiv():
+        '''
+        Переключение в режим одноинтервального деления
+                Результат:
+                        Любая операция деления (__truediv__) объектов Interval будет возвращать только один интервал;
+        '''
+        Interval.multiintervalmode = 0
+
+    @staticmethod
+    def multiintervaldiv():
+        '''
+        Переключение в режим мультиинтервального деления
+                Результат:
+                        Операция деления (__truediv__) объектов Interval сможет возвращать список из двух интервалов;
+        '''
+        Interval.multiintervalmode = 1
+
+    @staticmethod
+    def setprecision(prec):
+        '''
+        Установка точности результата
+                Параметры:
+                        prec (int): число, новая точность результатов операций Interval;
+                Результат:
+                        Точность результатов операций Interval становится равной prec;
+        '''
+        Interval.precision = prec
+
+    @staticmethod
+    def setcalcprecision(prec):
+        '''
+        Установка точности вычислений
+                Параметры:
+                        prec (int): число, новая точность вычислений операций Interval;
+                Результат:
+                        Точность вычислений операций Interval становится равной prec;
+        '''
+        Interval.calcprecision = prec
+
+    @staticmethod
+    def valueToInterval(expr):
+        '''
+        Создание объекта Interval из int, float, str, Decimal и списка двух объектов
+                Параметры:
+                        1. expr (...): объект, из которого можно создать объект класса Decimal;
+                        2. expr ([x1, x2..]): список из хотя бы двух элементов, из которых можно создать объекты класса Decimal;
+                Возвращаемое значение:
+                        result (Interval): созданный объект класса Interval;
+                            Точность: зависит от внешнего контекста.
+                            Округление: зависит от внешнего контекста.
+        '''
+        if isinstance(expr, int):
+            etmp = Interval([expr, expr])
+        elif isinstance(expr, float):
+            etmp = Interval([expr, expr])
+        elif isinstance(expr, str):
+            etmp = Interval([expr, expr])
+        elif isinstance(expr, Decimal):
+            etmp = Interval([expr, expr])
+        elif isinstance(expr, Interval):
+            etmp = expr
+        else:
+            raise ValueError("Can not convert to Interval")
+        return etmp
+
+    @staticmethod
+    def sin(x):
+        '''
+        Вычисление интервала - синуса интервала
+                Параметры:
+                        x (Interval): объект класса Interval;
+                Возвращаемое значение:
+                        result (Interval): объект класса Interval, синус исходного интервала;
+                            Точность: зависит от параметров Interval.
+                            Округление: внешнее расширяющее ([[[!!!]]]).
+                            [[[Функция может нарушить принцип внешнего округления Interval - WIP]]]
+        '''
+        Interval.__savecontext()
+        getcontext().rounding = ROUND_FLOOR
+        yrd = [decsin(x[0]), decsin(x[1])]
+        getcontext().rounding = ROUND_CEILING
+        yru = [decsin(x[0]), decsin(x[1])]
+        pi2 = Decimal("2") * decpi()
+        pi05 = decpi() / Decimal("2")
+        if ((x[0] - pi05) / pi2).quantize(Decimal("1"), rounding=ROUND_CEILING) <= ((x[1] - pi05) / pi2).quantize(
+                Decimal("1"), rounding=ROUND_FLOOR):
+            b = Decimal("1")
+        else:
+            b = max(yru)
+        if ((x[0] + pi05) / pi2).quantize(Decimal("1"), rounding=ROUND_CEILING) <= ((x[1] + pi05) / pi2).quantize(
+                Decimal("1"), rounding=ROUND_FLOOR):
+            a = Decimal("-1")
+        else:
+            a = min(yrd)
+        Interval.__loadcontext()
+        return Interval([a, b])
+
+    def cos(x):
+        '''
+        Вычисление интервала - косинуса интервала
+                Параметры:
+                        x (Interval): объект класса Interval;
+                Возвращаемое значение:
+                        result (Interval): объект класса Interval, косинус исходного интервала;
+                            Точность: зависит от параметров Interval.
+                            Округление: внешнее расширяющее ([[[!!!]]]).
+                            [[[Функция может нарушить принцип внешнего округления Interval - WIP]]]
+        '''
+        getcontext().rounding = ROUND_FLOOR
+        yrd = [deccos(x[0]), deccos(x[1])]
+        getcontext().rounding = ROUND_CEILING
+        yru = [deccos(x[0]), deccos(x[1])]
+        pi2 = 2 * decpi()
+        pi = decpi()
+        if (x[0] / pi2).quantize(Decimal("1"), rounding=ROUND_CEILING) <= (x[1] / pi2).quantize(Decimal("1"),
+                                                                                                rounding=ROUND_FLOOR):
             b = 1
         else:
-            b = max(y)
-
-        if math.ceil((x[0] + pi05)/pi2) <= math.floor((x[1] + pi05)/pi2):
+            b = max(yru)
+        if ((x[0] - pi) / pi2).quantize(Decimal("1"), rounding=ROUND_CEILING) <= ((x[1] - pi) / pi2).quantize(
+                Decimal("1"), rounding=ROUND_FLOOR):
             a = -1
         else:
-            a = min(y)
-        return Interval([a,b])
+            a = min(yrd)
+        return Interval([a, b])
 
-
-def cos(x):
-    if isinstance(x, int):
-        return math.cos(x)
-    elif isinstance(x, float):
-        return math.cos(x)
-    else:
-        y = [math.cos(x[0]), math.cos(x[1])]
-        pi2 = 2 * math.pi
-        if math.ceil(x[0]/pi2) <= math.floor(x[1]/pi2):
-            b = 1
-        else:
-            b = max(y)
-        if math.ceil((x[0] - math.pi)/pi2) <= math.floor((x[1] - math.pi)/pi2):
-            a = -1
-        else:
-            a = min(y)
-        return Interval([a,b])
-
-
-def exp(x):
-    if isinstance(x, (int, float)):
-        return math.exp(x)
-    return Interval([math.exp(x[0]), math.exp(x[1])])
-
-
-def abs(x):
-    if x[1] < 0:
-        return Interval([-x[0], -x[1]])
-    elif x[0] < 0 and x[1] > 0:
-        if -x[0] > x[1]:
-            return Interval([x[1], -x[0]])
-        else:
-            return Interval([-x[0], x[1]])
-    else:
-        return Interval([x[0], x[1]])
-
-
-def log(x, base):
-    if base > 1:
-        return Interval([math.log(x[0], base), math.log(x[1], base)])
-    else:
-        return Interval([math.log(x[1], base), math.log(x[0], base)])
+    @staticmethod
+    def exp(x):
+        '''
+        Проверка вложенности в другой интервал
+                Параметры:
+                        other (...): объект, из которого можно создать объект класса Interval;
+                Возвращаемое значение:
+                        result (boolean): результат предиката вложенности в другой интервал;
+        '''
+        ninterval = Interval(x)
+        Interval.__savecontext()
+        getcontext().rounding = ROUND_FLOOR
+        ninterval.x[0] = Decimal.exp(ninterval.x[0])
+        getcontext().rounding = ROUND_CEILING
+        ninterval.x[1] = Decimal.exp(ninterval.x[1])
+        ninterval.__correctize()
+        Interval.__loadcontext()
+        return ninterval

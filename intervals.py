@@ -1,5 +1,5 @@
 from interval import Interval
-from interval import sin, cos, exp, log
+from decimal import Decimal
 
 import math
 from copy import deepcopy
@@ -7,8 +7,14 @@ from copy import deepcopy
 
 class Intervals:
     def __init__(self, intervals):
+        assert isinstance(intervals, list), "Can create intervals only from list of intervals"
+        for interval in intervals:
+            assert isinstance(interval, Interval), "Can create intervals only from list of intervals"
         self.data = deepcopy(intervals)
         self._normalize()
+
+    def __len__(self):
+        return len(self.data)
 
     def __iter__(self):
         return iter(self.data)
@@ -26,9 +32,9 @@ class Intervals:
             first = False
         return result
 
-    def is_in(self, value):
+    def isIn(self, value):
         for interval in self:
-            if interval[0] <= value <= interval[1]:
+            if interval.isAround(value):
                 return True
         return False
 
@@ -37,12 +43,6 @@ class Intervals:
 
     def max_width(self):
         return max(interval.width() for interval in self)
-
-    def is_in(self, number):
-        for interval in self:
-            if interval[0] <= number <= interval[1]:
-                return True
-        return False
 
     def __add__(self, other):
         result = []
@@ -83,6 +83,16 @@ class Intervals:
         return self.__mul__(other)
 
     def __pow__(self, power):
+        if isinstance(power, Intervals):
+            if len(power) != 1:
+                raise ValueError("Wrong power")
+            power = power.data[0]
+
+        if isinstance(power, Interval):
+            if power[0] != power[1]:
+                raise ValueError("Wrong power")
+            power = power[0]
+
         result = []
         for interval in self:
             result.append(interval ** power)
@@ -91,23 +101,25 @@ class Intervals:
     def inversed(self):
         result = []
         for interval in self:
-            if interval[0] <= 0 <= interval[1]:
-                if interval[0] != 0:
-                    first = [-math.inf, 1 / interval[0]]
-                    result.append(Interval(first))
-                if interval[1] != 0:
-                    second = [1 / interval[1], math.inf]
-                    result.append(Interval(second))
+            value = Interval([Decimal('1'), Decimal('1')]) / interval
+
+            if isinstance(value[0], Interval):
+                result.append(value[0])
+                result.append(value[1])
             else:
-                result.append(Interval([1 / interval[1], 1 / interval[0]]))
+                result.append(value)
         return Intervals(result)
 
     def __truediv__(self, other):
-        other = value_to_intervals(other)
-        return self * other.inversed()
+        result = Intervals([])
+
+        for interval in self:
+            for other_interval in other:
+                result.union(value_to_intervals(interval / other_interval))
+        return result
 
     def __rtruediv__(self, other):
-        return other * self.inversed()
+        return other.__truediv__(self)
 
     def append(self, interval):
         self.data.append(Interval(interval.x.copy()))
@@ -124,9 +136,10 @@ class Intervals:
         result = []
         for new_interval in intervals:
             for old_interval in self:
-                intersection_part = Interval([max(old_interval[0], new_interval[0]),
-                                              min(old_interval[1], new_interval[1])])
-                if intersection_part[0] <= intersection_part[1]:
+                left_end = max(old_interval[0], new_interval[0])
+                right_end = min(old_interval[1], new_interval[1])
+                intersection_part = Interval([left_end, right_end])
+                if left_end <= right_end:
                     result.append(intersection_part)
         self.data = result
         self._normalize()
@@ -145,65 +158,63 @@ class Intervals:
 
 
 def intervals_sin(x):
-    if isinstance(x, (int, float, Interval)):
-        return sin(x)
+    if isinstance(x, (int, float)):
+        return math.sin(x)
+    elif isinstance(x, Interval):
+        return Interval.sin(x)
     elif isinstance(x, Intervals):
 
         result = []
         for interval in x:
-            result.append(sin(interval))
+            result.append(Interval.sin(interval))
         return Intervals(result)
     else:
         raise TypeError()
 
 
 def intervals_cos(x):
-    if isinstance(x, (int, float, Interval)):
-        return cos(x)
+    if isinstance(x, (int, float)):
+        return math.cos(x)
+    elif isinstance(x, Interval):
+        return Interval.cos(x)
     elif isinstance(x, Intervals):
 
         result = []
         for interval in x:
-            result.append(cos(interval))
+            result.append(Interval.cos(interval))
         return Intervals(result)
     else:
         raise TypeError()
 
 
 def intervals_exp(x):
-    if isinstance(x, (int, float, Interval)):
-        return exp(x)
+    if isinstance(x, (int, float)):
+        return math.exp(x)
+    elif isinstance(x, Interval):
+        return Interval.exp(x)
     elif isinstance(x, Intervals):
 
         result = []
         for interval in x:
-            result.append(exp(interval))
+            result.append(Interval.exp(interval))
         return Intervals(result)
     else:
         raise TypeError()
 
 
 def intervals_log(x, base):
-    if isinstance(x, (int, float, Interval)):
-        return log(x, base)
-    elif isinstance(x, Intervals):
-
-        result = []
-        for interval in x:
-            result.append(log(interval, base))
-        return Intervals(result)
-    else:
-        raise TypeError()
+    raise NotImplementedError("No log yet")
 
 
 def value_to_intervals(expr):
     if isinstance(expr, Intervals):
-        etmp = expr
+        return expr
     elif isinstance(expr, Interval):
-        etmp = Intervals([expr])
+        return Intervals([expr])
+    elif isinstance(expr, list):
+        return Intervals(expr)
     else:
-        etmp = Intervals([Interval([expr, expr])])
-    return etmp
+        return Intervals([Interval.valueToInterval(expr)])
 
 
 def print_as_points(intervals):
