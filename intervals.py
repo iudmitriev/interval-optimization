@@ -32,6 +32,15 @@ class Intervals:
             first = False
         return result
 
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+
+        for i in range(0, len(self)):
+            if self.data[i] != other.data[i]:
+                return False
+        return True
+
     def isIn(self, value):
         for interval in self:
             if interval.isAround(value):
@@ -93,10 +102,23 @@ class Intervals:
                 raise ValueError("Wrong power")
             power = power[0]
 
-        result = []
-        for interval in self:
-            result.append(interval ** power)
-        return Intervals(result)
+        if not isinstance(power, int) and not isinstance(power, Decimal):
+            raise ValueError("Only integer power is supported")
+
+        if isinstance(power, Decimal):
+            if power % 1 != 0:
+                raise ValueError("Only integer power is supported")
+            power = int(power)
+
+        result = value_to_intervals(Decimal('1'))
+        sign = 1 if power > 0 else -1
+        power = abs(power)
+        while power > 0:
+            result *= self
+            power -= 1
+        if sign == -1:
+            result = -result
+        return result
 
     def inversed(self):
         result = []

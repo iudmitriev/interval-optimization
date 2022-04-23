@@ -29,10 +29,12 @@ def RunTest(test, vocal=None, draw=False):
     e = Decimal(m.group(4))
     expected = Decimal(m.group(5))
 
-    critical_points = GetCriticalPoints(expression, interval, e / 10, classify=False)
+    conversion, critical_points = GetCriticalPoints(expression, interval, e / 10, classify=False)
     if vocal:
         print(f"Expression = {expression}, interval = {interval}, e = {e}")
         print(f"Expected {expected}")
+        if not conversion:
+            print_red("No real result")
 
     if draw:
         DrawPoints(critical_points, expression, interval)
@@ -40,7 +42,7 @@ def RunTest(test, vocal=None, draw=False):
     for interval in critical_points:
         if vocal:
             print(f'interval [{interval[0]}, {interval[1]}]')
-        if interval.isAround(expected):
+        if interval.isAround(expected) or abs(interval.mid() - expected) < e:
             if vocal:
                 print_green("Passed!")
                 print()

@@ -1,6 +1,6 @@
 import sympy
 from decimal import Decimal
-from interval import Interval
+from interval import Interval, decpi
 from intervals import value_to_intervals, intervals_sin, intervals_cos, intervals_exp, intervals_log
 
 
@@ -17,6 +17,8 @@ def eval_expression(expression, subs=None):
                 raise ValueError(f"Unknown symbol without subs {expression}")
             value = subs[str(expression)]
             return value_to_intervals(value)
+        elif expression is sympy.S.Pi:
+            return value_to_intervals(decpi())
         else:
             raise NotImplementedError(f'Unknown simple type {type(expression)}')
 
@@ -29,7 +31,8 @@ def eval_expression(expression, subs=None):
     if isinstance(expression, sympy.Mul):
         result = value_to_intervals(Decimal('1'))
         for leaf in expression.args:
-            result *= eval_expression(leaf, subs)
+            leaf_eval = eval_expression(leaf, subs)
+            result *= leaf_eval
         return result
 
     if isinstance(expression, sympy.Pow):
@@ -44,6 +47,10 @@ def eval_expression(expression, subs=None):
     if isinstance(expression, sympy.cos):
         value = eval_expression(expression.args[0], subs)
         return intervals_cos(value)
+
+    if isinstance(expression, sympy.exp):
+        value = eval_expression(expression.args[0], subs)
+        return intervals_exp(value)
 
     raise NotImplementedError(f'unknown complex type {type(expression)}')
 

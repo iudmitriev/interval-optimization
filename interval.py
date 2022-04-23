@@ -372,6 +372,9 @@ class Interval:
     def __rmul__(self, other):
         return self.__mul__(other)
 
+    def __eq__(self, other):
+        return self[0] == other[0] and self[1] == other[1]
+
     # 0: -0 or +0 not present
     # 1: -0 present
     # 2: +0 present
