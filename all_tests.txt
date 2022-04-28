@@ -1,10 +1,9 @@
-# Работает:
 expression = x**2; interval = [-5, 5]; e = 1e-4; expected = 0
 expression = (x + 10)**2; interval = [-31, 15]; e = 1e-4; expected = -10
 expression = (x - 10)**4 + 100; interval = [-50, 25]; e = 1e-4; expected = 10
 expression = x**6/6 - x**5 * 52/25 + x**4 * 39/80 + x**3 * 71/10 - x**2 * 79/20 - x + 1/10; interval = [-1.5, 11]; e = 1e-4; expected = 10
 expression = sin(x) + sin(10 * x / 3); interval = [-2.7, 7.5]; e = 1e-4; expected = 5.14574
-expression = -(16 * x**2 - 24 * x + 5) * exp(-x); interval = [1.9, 2.9]; e = 1e-3; expected = 2.868
+expression = -(16 * x**2 - 24 * x + 5) * exp(-x); interval = [1.9, 2.9]; e = 1e-3; expected = 2.8680339
 expression = (3 * x - 1.4) * sin(18 * x); interval = [0, 1.2]; e = 1e-3; expected = 0.966
 expression = -(x + sin(x)) * exp(-x**2); interval = [-10, 10]; e = 1e-3; expected = 0.680
 expression = sin(x) + sin(10 * x / 3) + log(x) - 0.84 * x + 3; interval = [2.7, 7.5]; e = 1e-3; expected = 5.200
