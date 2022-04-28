@@ -6,7 +6,6 @@ import numpy
 
 import interval as interval_lib
 from intervals import *
-from sympy_decimal_evaluation import *
 
 CUSTOM_MODULES = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
 
