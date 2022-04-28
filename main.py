@@ -4,6 +4,7 @@ from critical_points import *
 from terminal_colors import *
 
 from decimal import Decimal
+import interval
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -29,19 +30,20 @@ def RunTest(test, vocal=None, draw=False):
     e = Decimal(m.group(4))
     expected = Decimal(m.group(5))
 
-    conversion, critical_points = GetCriticalPoints(expression, interval, e / 10, classify=False)
+    conversion, critical_points = GetCriticalPoints(expression, interval, e / 10, classify=True)
     if vocal:
         print(f"Expression = {expression}, interval = {interval}, e = {e}")
         print(f"Expected {expected}")
+        print("Critical points are ")
+        print_critical_points(critical_points)
         if not conversion:
             print_red("No real result")
 
     if draw:
         DrawPoints(critical_points, expression, interval)
 
-    for interval in critical_points:
-        if vocal:
-            print(f'interval [{interval[0]}, {interval[1]}]')
+    for point in critical_points:
+        interval = point.interval
         if interval.isAround(expected) or abs(interval.mid() - expected) < e:
             if vocal:
                 print_green("Passed!")
@@ -114,35 +116,45 @@ def RunTests(file='tests.txt', vocal=None, draw=False):
 
 def DrawPoints(critical_points, expression, interval):
     func = sym.utilities.lambdify(['x'], expression)
-    x = np.linspace(interval[0], interval[1], 1000)
+    x = np.linspace(float(interval[0]), float(interval[1]), 1000)
     y = list(map(func, x))
 
     fig, ax = plt.subplots(figsize=(10, 5))
     plt.plot(x, y, color='b', label=str(expression))
 
-    min_points_x = []
-    max_points_x = []
-    unknown_points_x = []
+    first_minimum = True
+    first_maximum = True
+    first_unknown = True
     for p in critical_points:
+        area = (p.interval[0], p.interval[1])
+        point = (func(float(p.x)), func(float(p.x)))
         if p.type == Extrema.Minimum:
-            min_points_x.append(p.x)
+            if first_minimum:
+                plt.plot(area, point, 'ro-', label='minimum points')
+                first_minimum = False
+            else:
+                plt.plot(area, point, 'ro-')
         elif p.type == Extrema.Maximum:
-            max_points_x.append(p.x)
+            if first_maximum:
+                plt.plot(area, point, 'go-', label='maximum points')
+                first_maximum = False
+            else:
+                plt.plot(area, point, 'go-')
         else:
-            unknown_points_x.append(p.x)
-
-    ax.scatter(min_points_x, list(map(func, min_points_x)), color='r', label='minimum points')
-    ax.scatter(max_points_x, list(map(func, max_points_x)), color='g', label='maximum points')
-    ax.scatter(unknown_points_x, list(map(func, unknown_points_x)), color='y', label='unknown points')
+            if first_unknown:
+                plt.plot(area, point, 'yo-', label='unknown points')
+                first_unknown = False
+            else:
+                plt.plot(area, point, 'yo-')
 
     ax.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    if True:
-        RunTests(vocal=True, draw=False)
-
     if False:
+        RunTests(vocal=True, draw=True)
+
+    if True:
         print("Running all tests...")
-        RunTests(file='all_tests.txt', vocal=None, draw=False)
+        RunTests(file='all_tests.txt', vocal=True, draw=True)

@@ -33,6 +33,7 @@ class Intervals:
         return result
 
     def __eq__(self, other):
+        other = value_to_intervals(other)
         if len(self) != len(other):
             return False
 
@@ -41,7 +42,23 @@ class Intervals:
                 return False
         return True
 
-    def isIn(self, value):
+    def __gt__(self, other):
+        other = value_to_intervals(other)
+        for interval1 in self:
+            for interval2 in other:
+                if not (interval1 > interval2):
+                    return False
+        return True
+
+    def __lt__(self, other):
+        other = value_to_intervals(other)
+        for interval1 in self:
+            for interval2 in other:
+                if not (interval1 < interval2):
+                    return False
+        return True
+
+    def isAround(self, value):
         for interval in self:
             if interval.isAround(value):
                 return True
@@ -97,28 +114,10 @@ class Intervals:
                 raise ValueError("Wrong power")
             power = power.data[0]
 
-        if isinstance(power, Interval):
-            if power[0] != power[1]:
-                raise ValueError("Wrong power")
-            power = power[0]
-
-        if not isinstance(power, int) and not isinstance(power, Decimal):
-            raise ValueError("Only integer power is supported")
-
-        if isinstance(power, Decimal):
-            if power % 1 != 0:
-                raise ValueError("Only integer power is supported")
-            power = int(power)
-
-        result = value_to_intervals(Decimal('1'))
-        sign = 1 if power > 0 else -1
-        power = abs(power)
-        while power > 0:
-            result *= self
-            power -= 1
-        if sign == -1:
-            result = -result
-        return result
+        result = []
+        for interval in self:
+            result.append(interval ** power)
+        return value_to_intervals(result)
 
     def inversed(self):
         result = []
@@ -133,6 +132,7 @@ class Intervals:
         return Intervals(result)
 
     def __truediv__(self, other):
+        other = value_to_intervals(other)
         result = Intervals([])
 
         for interval in self:
@@ -141,6 +141,7 @@ class Intervals:
         return result
 
     def __rtruediv__(self, other):
+        other = value_to_intervals(other)
         return other.__truediv__(self)
 
     def append(self, interval):
