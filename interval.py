@@ -1,5 +1,4 @@
 from decimal import *
-import math
 
 
 def decsig(value):
@@ -196,10 +195,17 @@ class Interval:
                 +:  Interval __add__ (self, Interval): сумма двух интервалов с внешним расширяющим округлением
                 -:  Interval __sub__ (self, Interval): разность двух интервалов с внешним расширяющим округлением
                 *:  Interval __mul__ (self, Interval): произведение двух интервалов с внешним расширяющим округлением
-                **: Interval __pow__ (self, int): возведение интервала в целую степень с внешним расширяющим округлением
+                **: Interval __pow__ (self, Interval): возведение интервала в рациональную (только положительные интервалы)
+                                                       или целую степень с внешним расширяющим округлением
                 /:  Interval | [Interval, Interval] __truediv__ (self, Interval): частное двух интервалов с внешним расширяющим
-                                                                        округлением при multiintervalmode = 1 возможен
-                                                                        возврат списка из двух объектов класса Interval
+                                                                                  округлением при multiintervalmode = 1 возможен
+                                                                                  возврат списка из двух объектов класса Interval
+                <: Boolean __lt__ (self, Interval):   |
+                <=: Boolean __le__ (self, Interval):  | операторы сравнения
+                >: Boolean __gt__ (self, Interval):   | (true только при непересекающихся интервалах)
+                >=: Boolean __ge__ (self, Interval):  |
+                ==: Boolean __eq__ (self, Interval): оператор равенства
+                !=: Boolean __ne__ (self, Interval): оператор неравенства
 
             Методы:
                 Interval mid (self): возвращает точечный интервал - середину исходного интервала, с математическим округлением
@@ -212,9 +218,7 @@ class Interval:
             Математические функции:
                 Interval exp (self): интервал экспоненты данного интервала, с внешним расширяющим округлением
                 Interval sin (self): интервал синуса данного интервала, с внешним расширяющим округлением
-                                     [[[Возможна ошибка округления в последних знаках]]]
                 Interval cos (self): интервал косинуса данного интервала, с внешним расширяющим округлением
-                                     [[[Возможна ошибка округления в последних знаках]]]
 
     """
     precision = 10
@@ -259,22 +263,13 @@ class Interval:
                             Точность: зависит от параметров Interval.
                             Округление: математическое.
         '''
-        self.__savecontext()
+        Interval.__savecontext()
         middle = Decimal("Inf")
         if (self.x[0] != Decimal("-Inf") and self.x[1] != Decimal("Inf")):
             middle = (Decimal("0.5") * (self.x[0] + self.x[1])).quantize(Decimal(quantizestring(self.precision)),
                                                                          rounding=ROUND_HALF_EVEN)
         Interval.__loadcontext()
         return middle
-
-    def __eq__(self, other):
-        return self[0] == other[0] and self[1] == other[1]
-
-    def __gt__(self, other):
-        return self[0] > other[1]
-
-    def __lt__(self, other):
-        return self[1] < other[0]
 
     def width(self):
         '''
@@ -380,7 +375,7 @@ class Interval:
                 getcontext().rounding = ROUND_CEILING
                 vru = [self.x[0] ** ointerval.x[0], self.x[0] ** ointerval.x[1],
                        self.x[1] ** ointerval.x[0], self.x[1] ** ointerval.x[1]]
-                ninterval = Interval([min(vrd), max(vru)])
+                ninterval = Interval([min(vrd), max(vrd)])
                 Interval.__loadcontext()
                 return ninterval
         else:
@@ -395,7 +390,7 @@ class Interval:
                 vrd = [self.x[0] ** ointerval.x[0], self.x[1] ** ointerval.x[0]]
                 getcontext().rounding = ROUND_CEILING
                 vru = [self.x[0] ** ointerval.x[0], self.x[1] ** ointerval.x[0]]
-                ninterval = Interval([min(vrd), max(vru)])
+                ninterval = Interval([min(vrd), max(vrd)])
                 Interval.__loadcontext()
                 return ninterval
             else:
@@ -409,7 +404,7 @@ class Interval:
                        self.x[1] ** ointerval.x[0], self.x[1] ** ointerval.x[1],
                        self.x[0] ** (ointerval.x[0] + 1), self.x[0] ** (ointerval.x[1] - 1),
                        self.x[1] ** (ointerval.x[0] + 1), self.x[1] ** (ointerval.x[1] - 1)]
-                ninterval = Interval([min(vrd), max(vru)])
+                ninterval = Interval([min(vrd), max(vrd)])
                 Interval.__loadcontext()
                 return ninterval
 
@@ -450,12 +445,14 @@ class Interval:
         ointerval = Interval.valueToInterval(other)
         return ointerval.__mul__(self)
 
-    # 0: -0 or +0 not present
-    # 1: -0 present
-    # 2: +0 present
-    # 3: -0 and +0 present
-    # 4: NaN present
     def __getNullType(self):
+        '''
+            0: -0 or +0 not present
+            1: -0 present
+            2: +0 present
+            3: -0 and +0 present
+            4: NaN present
+        '''
         if (Decimal.is_nan(self.x[0]) or Decimal.is_nan(self.x[1])):
             return 4
         if (not self.isAround('0')):
@@ -467,6 +464,7 @@ class Interval:
         if (decsig(self.x[0]) == -1):
             return 1
         return 4
+
 
     def __truediv__(self, other):
         ointerval = Interval.valueToInterval(other)
@@ -508,6 +506,30 @@ class Interval:
         Interval.__loadcontext()
         return Interval(["-Inf", "Inf"])
 
+    def __lt__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        return self.x[1] < ointerval.x[0]
+
+    def __le__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        return self.x[1] <= ointerval.x[0]
+
+    def __gt__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        return self.x[0] > ointerval.x[1]
+
+    def __ge__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        return self.x[0] >= ointerval.x[1]
+
+    def __eq__(self, other):
+        ointerval = Interval.valueToInterval(other)
+        return self.x[0] == ointerval.x[0] and self.x[1] == ointerval.x[1]
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
     @staticmethod
     def intervaldiv():
         '''
@@ -517,6 +539,7 @@ class Interval:
         '''
         Interval.multiintervalmode = 0
 
+
     @staticmethod
     def multiintervaldiv():
         '''
@@ -525,6 +548,7 @@ class Interval:
                         Операция деления (__truediv__) объектов Interval сможет возвращать список из двух интервалов;
         '''
         Interval.multiintervalmode = 1
+
 
     @staticmethod
     def setprecision(prec):
@@ -537,6 +561,7 @@ class Interval:
         '''
         Interval.precision = prec
 
+
     @staticmethod
     def setcalcprecision(prec):
         '''
@@ -547,6 +572,7 @@ class Interval:
                         Точность вычислений операций Interval становится равной prec;
         '''
         Interval.calcprecision = prec
+
 
     @staticmethod
     def valueToInterval(expr):
@@ -571,6 +597,7 @@ class Interval:
         else:
             etmp = expr
         return etmp
+
 
     @staticmethod
     def sin(x):
@@ -605,6 +632,7 @@ class Interval:
         Interval.__loadcontext()
         return Interval([a, b])
 
+
     def cos(x):
         '''
         Вычисление интервала - косинуса интервала
@@ -636,6 +664,7 @@ class Interval:
         Interval.__loadcontext()
         return Interval([a, b])
 
+
     @staticmethod
     def exp(x):
         '''
@@ -655,6 +684,7 @@ class Interval:
         Interval.__loadcontext()
         return ninterval
 
+
     @staticmethod
     def ln(x):
         '''
@@ -673,3 +703,4 @@ class Interval:
         ninterval.__correctize()
         Interval.__loadcontext()
         return ninterval
+
