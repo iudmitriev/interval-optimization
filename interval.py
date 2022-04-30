@@ -633,6 +633,7 @@ class Interval:
         return Interval([a, b])
 
 
+    @staticmethod
     def cos(x):
         '''
         Вычисление интервала - косинуса интервала
