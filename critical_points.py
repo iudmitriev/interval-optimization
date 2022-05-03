@@ -41,16 +41,35 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x'), classify=False):
     diff = sym.diff(func, var)
     second_diff = sym.diff(diff, var)
 
-    f = sym.utilities.lambdify(var, diff, modules=CUSTOM_MODULES)
-    # f = lambda value: eval_expression(diff, {'x': value})
+    diff_func = sym.utilities.lambdify(var, diff, modules=CUSTOM_MODULES)
     second_diff_func = sym.utilities.lambdify(var, second_diff, modules=CUSTOM_MODULES)
-    # second_diff_func = lambda value: eval_expression(second_diff, {'x': value})
 
-    conversion, result = SimpleNewtonInterval(f, second_diff_func, interval, e)
-    result.append(Interval.valueToInterval(interval[0]))
-    result.append(Interval.valueToInterval(interval[1]))
+    conversion, result = SimpleNewtonInterval(diff_func, second_diff_func, interval, e)
     if classify:
-        result = SecondDiffClassification(result, second_diff_func)
+        result = DiffClassification(result, second_diff_func)
+
+        left_end = value_to_intervals(interval[0])
+        if diff_func(left_end) > 0:
+            left_end_type = Extrema.Minimum
+        elif diff_func(left_end) < 0:
+            left_end_type = Extrema.Maximum
+        else:
+            left_end_type = Extrema.Unknown
+        left_end_point = CriticalPoint(x=interval[0], interval=left_end.data[0], type=left_end_type)
+        result.append(left_end_point)
+
+        right_end = value_to_intervals(interval[1])
+        if diff_func(right_end) > 0:
+            right_end_type = Extrema.Maximum
+        elif diff_func(right_end) < 0:
+            right_end_type = Extrema.Minimum
+        else:
+            right_end_type = Extrema.Unknown
+        right_end_point = CriticalPoint(x=interval[1], interval=right_end.data[0], type=right_end_type)
+        result.append(right_end_point)
+    else:
+        result.append(Interval.valueToInterval(interval[0]))
+        result.append(Interval.valueToInterval(interval[1]))
     return conversion, result
 
 
@@ -66,7 +85,7 @@ class Extrema(enum.Enum):
 CriticalPoint = collections.namedtuple('CriticalPoint', ['x', 'interval', 'type'])
 
 
-def SecondDiffClassification(critical_points, second_diff):
+def DiffClassification(critical_points, second_diff):
     result = []
     for interval in critical_points:
         value_in_point = second_diff(value_to_intervals(interval))
