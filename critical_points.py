@@ -55,7 +55,7 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x'), classify=False):
             left_end_type = Extrema.Maximum
         else:
             left_end_type = Extrema.Unknown
-        left_end_point = CriticalPoint(x=interval[0], interval=left_end.data[0], type=left_end_type)
+        left_end_point = CriticalPoint(x=interval[0], interval=left_end[0], type=left_end_type)
         result.append(left_end_point)
 
         right_end = value_to_intervals(interval[1])
@@ -65,7 +65,7 @@ def GetCriticalPoints(func, interval, e, var=sym.Symbol('x'), classify=False):
             right_end_type = Extrema.Minimum
         else:
             right_end_type = Extrema.Unknown
-        right_end_point = CriticalPoint(x=interval[1], interval=right_end.data[0], type=right_end_type)
+        right_end_point = CriticalPoint(x=interval[1], interval=right_end[0], type=right_end_type)
         result.append(right_end_point)
     else:
         result.append(Interval.valueToInterval(interval[0]))

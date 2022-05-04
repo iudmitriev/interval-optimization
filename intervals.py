@@ -22,6 +22,9 @@ class Intervals:
     def __bool__(self):
         return bool(self.data)
 
+    def __getitem__(self, item):
+        return self.data[item]
+
     def __repr__(self):
         result = ""
         first = True
