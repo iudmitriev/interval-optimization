@@ -7,7 +7,7 @@ import numpy
 import interval as interval_lib
 from intervals import *
 
-CUSTOM_MODULES = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'log': intervals_log}, 'numpy']
+CUSTOM_MODULES = [{'sin': intervals_sin, 'cos': intervals_cos, 'exp': intervals_exp, 'ln': intervals_ln}, 'numpy']
 
 
 def SimpleNewtonInterval(func, interval_diff, interval, e, _debug=False):

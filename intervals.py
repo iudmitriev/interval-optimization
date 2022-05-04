@@ -184,52 +184,27 @@ class Intervals:
 
 
 def intervals_sin(x):
-    if isinstance(x, (int, float)):
-        return math.sin(x)
-    elif isinstance(x, Interval):
-        return Interval.sin(x)
-    elif isinstance(x, Intervals):
-
-        result = []
-        for interval in x:
-            result.append(Interval.sin(interval))
-        return Intervals(result)
-    else:
-        raise TypeError()
+    x = value_to_intervals(x)
+    result = [Interval.sin(interval) for interval in x]
+    return Intervals(result)
 
 
 def intervals_cos(x):
-    if isinstance(x, (int, float)):
-        return math.cos(x)
-    elif isinstance(x, Interval):
-        return Interval.cos(x)
-    elif isinstance(x, Intervals):
-
-        result = []
-        for interval in x:
-            result.append(Interval.cos(interval))
-        return Intervals(result)
-    else:
-        raise TypeError()
+    x = value_to_intervals(x)
+    result = [Interval.cos(interval) for interval in x]
+    return Intervals(result)
 
 
 def intervals_exp(x):
-    if isinstance(x, (int, float)):
-        return math.exp(x)
-    elif isinstance(x, Interval):
-        return Interval.exp(x)
-    elif isinstance(x, Intervals):
-
-        result = []
-        for interval in x:
-            result.append(Interval.exp(interval))
-        return Intervals(result)
-    else:
-        raise TypeError()
+    x = value_to_intervals(x)
+    result = [Interval.exp(interval) for interval in x]
+    return Intervals(result)
 
 
-def intervals_log(x, base):
-    raise NotImplementedError("No log yet")
+def intervals_ln(x):
+    x = value_to_intervals(x)
+    result = [Interval.sin(interval) for interval in x]
+    return Intervals(result)
 
 
 def value_to_intervals(expr):
