@@ -95,7 +95,6 @@ def DiffClassification(critical_points, second_diff):
             point_type = Extrema.Maximum
         else:
             point_type = Extrema.Unknown
-
         point = CriticalPoint(x=interval.mid(), interval=interval, type=point_type)
         result.append(point)
     return result
